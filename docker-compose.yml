@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  php-fpm:
+    image: webdevops/php-nginx:8.4
+    container_name: pixel-miniapps-webserver
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      - WEB_DOCUMENT_ROOT=/app/webroot
+      - PHP_DISPLAY_ERRORS=1
+      - PHP_MEMORY_LIMIT=512M
+    ports:
+      - "8080:80"   # pristup cez http://localhost:8080
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mariadb:10.5.8
+    container_name: pixel-miniapps-mysql
+    volumes:
+      - ./tmp/data/mysql_db:/var/lib/mysql
+    env_file:
+      - docker/mysql.env
+    ports:
+      - "3306:3306"
+    restart: always

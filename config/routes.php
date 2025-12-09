@@ -62,6 +62,9 @@ return function (RouteBuilder $routes): void {
          */
         $builder->connect('/pages/*', 'Pages::display');
 
+        $builder->connect('/tv', ['controller' => 'Monitoring', 'action' => 'index']);
+        $builder->connect('/tv/{screen_id}', ['controller' => 'Monitoring', 'action' => 'screen'], ['_name' => 'monitoring_screen'])->setPass(['screen_id']);
+
         /*
          * Connect catchall routes for all controllers.
          *
