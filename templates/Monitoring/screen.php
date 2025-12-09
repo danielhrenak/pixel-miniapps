@@ -12,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Cycle</title>
     <link rel="stylesheet" href="/css/monitoring.css?v=4.0">
+    <link rel="stylesheet" href="/css/snow.css?v=4.0">
 </head>
 <body>
     <iframe id="monitorFrame"></iframe>
@@ -31,5 +32,6 @@
         const urls = <?= json_encode($urls); ?>;
     </script>
     <script src="/js/monitoring.js"></script>
+    <script src="/js/snow.js"></script>
 </body>
 </html>
