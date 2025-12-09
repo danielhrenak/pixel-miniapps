@@ -31,7 +31,7 @@ class MonitoringController extends AppController
             ->find()
             ->select(['url', 'duration'])
             ->where(['screen_id' => $screen_id])
-            ->order(['RAND()']);
+            ->orderBy(['RAND()']);
 
 
         $screen = $this->fetchTable('Screens')->get($screen_id);
