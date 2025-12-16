@@ -32,7 +32,7 @@ class ItemsTable extends Table
             ->allowEmptyString('id', null, 'create');
 
         $validator
-            ->scalar('name')
+            ->scalar('text')
             ->allowEmptyString('name');
 
         $validator
@@ -40,8 +40,12 @@ class ItemsTable extends Table
             ->allowEmptyString('screen_id');
 
         $validator
-            ->scalar('content')
-            ->allowEmptyString('content');
+            ->scalar('image')
+            ->allowEmptyString('image');
+
+        $validator
+            ->scalar('video')
+            ->allowEmptyString('video');
 
         $validator
             ->scalar('author')

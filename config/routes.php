@@ -64,6 +64,7 @@ return function (RouteBuilder $routes): void {
 
         $builder->connect('/tv', ['controller' => 'Monitoring', 'action' => 'index']);
         $builder->connect('/tv/{screen_id}', ['controller' => 'Monitoring', 'action' => 'screen'], ['_name' => 'monitoring_screen'])->setPass(['screen_id']);
+        $builder->connect('/tv-app/{screen_id}', ['controller' => 'TvApp', 'action' => 'view'], ['_name' => 'tvapp_view'])->setPass(['screen_id']);
 
         /*
          * Connect catchall routes for all controllers.
