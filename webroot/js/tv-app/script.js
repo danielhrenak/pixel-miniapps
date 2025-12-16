@@ -387,7 +387,7 @@ if (wallPosts.length > 0) {
     renderTwoPosts(0);
 
     // Start rotation every 5 seconds, alternating between both posts
-    rotationInterval = setInterval(rotatePosts, 1000);
+    rotationInterval = setInterval(rotatePosts, 20000);
 } else {
     console.warn("No wall posts to display");
 }
