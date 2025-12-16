@@ -34,9 +34,11 @@ class TvAppController extends AppController
 
     private function loadWallPosts($screen_id)
     {
-        $wallPosts = $this->fetchTable('Items')->find()->where(['screen_id' => $screen_id])
-            ->orderBy(['RAND()'])
+        $wallPosts = $this->fetchTable('Posts')->find()
+            ->where(['screen_id' => $screen_id, 'hidden' => 0])
+            ->orderBy(['created' => 'DESC'])
             ->toArray();
+
         return $wallPosts;
     }
 

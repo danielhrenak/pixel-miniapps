@@ -6,13 +6,13 @@ namespace App\Model\Table;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
-class ItemsTable extends Table
+class PostsTable extends Table
 {
     public function initialize(array $config): void
     {
         parent::initialize($config);
 
-        $this->setTable('items');
+        $this->setTable('posts');
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
 
@@ -32,7 +32,7 @@ class ItemsTable extends Table
             ->allowEmptyString('id', null, 'create');
 
         $validator
-            ->scalar('name')
+            ->scalar('text')
             ->allowEmptyString('name');
 
         $validator
@@ -40,22 +40,26 @@ class ItemsTable extends Table
             ->allowEmptyString('screen_id');
 
         $validator
-            ->scalar('content')
-            ->allowEmptyString('content');
+            ->scalar('image')
+            ->allowEmptyString('image');
+
+        $validator
+            ->scalar('video')
+            ->allowEmptyString('video');
 
         $validator
             ->scalar('author')
             ->allowEmptyString('author');
 
         $validator
-            ->scalar('category')
-            ->maxLength('category', 100)
-            ->allowEmptyString('category');
-
-        $validator
-            ->integer('priority')
-            ->allowEmptyString('priority');
+            ->integer('hidden')
+            ->allowEmptyString('hidden');
 
         return $validator;
+    }
+
+    public function findActive(\Cake\ORM\Query $query, array $options)
+    {
+        return $query->where(['hidden' => 0]);
     }
 }

@@ -6,6 +6,63 @@ const announcements = window.tvAppData?.announcements || [];
 const wallPosts = window.tvAppData?.wallPosts || [];
 
 /****************
+ * PRIORITY WEIGHTING SYSTEM
+ ****************/
+// Calculate weights for posts based on creation date
+function calculatePostWeights(posts) {
+    if (posts.length === 0) return [];
+
+    // Find newest and oldest post dates
+    let newestTime = 0;
+    let oldestTime = Infinity;
+
+    posts.forEach(post => {
+        const postTime = new Date(post.created).getTime();
+        newestTime = Math.max(newestTime, postTime);
+        oldestTime = Math.min(oldestTime, postTime);
+    });
+
+    const timeRange = newestTime - oldestTime;
+
+    // Calculate weights using exponential function
+    return posts.map(post => {
+        const postTime = new Date(post.created).getTime();
+
+        // Normalize age to 0-1 (0 = newest, 1 = oldest)
+        const normalizedAge = timeRange === 0 ? 0 : (newestTime - postTime) / timeRange;
+
+        // Exponential weight: newer posts get much higher weight
+        // Formula: e^(-2 * age) gives newer posts ~7x weight compared to oldest
+        const weight = Math.exp(-2 * normalizedAge);
+
+        return weight;
+    });
+}
+
+// Select a random post with weighted probability
+function selectWeightedRandomPost(posts) {
+    console.log(posts);
+
+
+    if (posts.length === 0) return null;
+    if (posts.length === 1) return posts[0];
+
+    const weights = calculatePostWeights(posts);
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+
+    let random = Math.random() * totalWeight;
+
+    for (let i = 0; i < posts.length; i++) {
+        random -= weights[i];
+        if (random <= 0) {
+            return posts[i];
+        }
+    }
+
+    return posts[posts.length - 1];
+}
+
+/****************
  * LAYOUT LOGIC
  ****************/
 const layout = document.querySelector(".layout");
@@ -24,6 +81,7 @@ let currentLinkIndex = 0;
 let rotationInterval;
 let linkRotationInterval;
 let countdownInterval;
+let lastRotatedPosition = 0; // Track which position was last rotated
 
 // Announcements
 if (!announcementsEl) {
@@ -59,15 +117,68 @@ function getYouTubeEmbedUrl(url) {
     return url.includes('embed') ? url : null;
 }
 
-// Render exactly 2 posts
+// Format relative time (e.g., "5 days ago")
+function formatTimeAgo(createdAt) {
+    if (!createdAt) return "";
+
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffMs = now - created;
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSecs < 60) return "práve teraz";
+    if (diffMins < 60) return `${diffMins} min${diffMins === 1 ? '' : ''}`;
+    if (diffHours < 24) return `${diffHours}hours ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}weeks ago`;
+    return `${Math.floor(diffDays / 30)}months ago`;
+}
+
+// Render exactly 2 posts (first is manual, second is weighted random)
 function renderTwoPosts(startIdx) {
     wallContainer.innerHTML = "";
 
+    // Check if we have posts
+    if (!wallPosts || wallPosts.length === 0) {
+        console.warn("No wall posts available");
+        return;
+    }
+
     for (let i = 0; i < 2; i++) {
-        const idx = (startIdx + i) % wallPosts.length;
-        const p = wallPosts[idx];
+        let p;
+
+        if (wallPosts.length === 1) {
+            // Only 1 post available - show the same post twice
+            p = wallPosts[0];
+        } else if (i === 0) {
+            // First post: sequential
+            const idx = (startIdx + i) % wallPosts.length;
+            p = wallPosts[idx];
+        } else {
+            // Second post: weighted random (prioritize newer posts)
+            p = selectWeightedRandomPost(wallPosts);
+
+            // Fallback: if weighted selection fails, use random
+            if (!p) {
+                p = wallPosts[Math.floor(Math.random() * wallPosts.length)];
+            }
+        }
+
+        if (!p) continue; // Skip if post is invalid
+
         const post = document.createElement("div");
         post.className = "wall-post";
+
+        // Add timestamp
+        if (p.created) {
+            const timestamp = document.createElement("div");
+            timestamp.className = "post-timestamp";
+            timestamp.textContent = formatTimeAgo(p.created);
+            post.appendChild(timestamp);
+        }
 
         if (p.image) {
             const imgWrapper = document.createElement("div");
@@ -108,9 +219,9 @@ function renderTwoPosts(startIdx) {
 
             post.appendChild(videoWrapper);
         } else {
-            post.innerHTML = `<strong>${p.author}</strong>`;
+            post.innerHTML = `<strong>${p.author || "Bez autora"}</strong>`;
             const textDiv = document.createElement("div");
-            textDiv.textContent = p.text;
+            textDiv.textContent = p.text || "";
             post.appendChild(textDiv);
         }
         wallContainer.appendChild(post);
@@ -135,26 +246,43 @@ function resizeImageToFit(img, post) {
     }
 }
 
-// Rotate only second post every 15 seconds
+// Rotate both posts alternately (use weighted selection)
 function rotatePosts() {
     const posts = wallContainer.querySelectorAll(".wall-post");
 
-    if (posts.length < 2) return;
+    if (posts.length < 2 || wallPosts.length === 0) return;
 
-    const randomIdx = Math.floor(Math.random() * wallPosts.length);
-    const secondPost = posts[randomIdx];
-    secondPost.style.animation = "none";
+    // Alternate between rotating first and second post
+    const positionToRotate = lastRotatedPosition === 0 ? 1 : 0;
+    const postToReplace = posts[positionToRotate];
+
+    lastRotatedPosition = positionToRotate;
+
+    postToReplace.style.animation = "none";
 
     setTimeout(() => {
-        secondPost.style.animation = "fadeOutUp 0.5s ease-out forwards";
+        postToReplace.style.animation = "fadeOutUp 0.5s ease-out forwards";
     }, 10);
 
     setTimeout(() => {
-        const newRandomIdx = Math.floor(Math.random() * wallPosts.length);
-        const p = wallPosts[newRandomIdx];
+        // Use weighted random selection
+        let p = selectWeightedRandomPost(wallPosts);
+
+        // Fallback if selection fails
+        if (!p) {
+            p = wallPosts[Math.floor(Math.random() * wallPosts.length)];
+        }
 
         const newPost = document.createElement("div");
         newPost.className = "wall-post";
+
+        // Add timestamp
+        if (p.created) {
+            const timestamp = document.createElement("div");
+            timestamp.className = "post-timestamp";
+            timestamp.textContent = formatTimeAgo(p.created);
+            newPost.appendChild(timestamp);
+        }
 
         if (p.image) {
             const imgWrapper = document.createElement("div");
@@ -194,14 +322,14 @@ function rotatePosts() {
 
             newPost.appendChild(videoWrapper);
         } else {
-            newPost.innerHTML = `<strong>${p.author}</strong>`;
+            newPost.innerHTML = `<strong>${p.author || "Bez autora"}</strong>`;
             const textDiv = document.createElement("div");
-            textDiv.textContent = p.text;
+            textDiv.textContent = p.text || "";
             newPost.appendChild(textDiv);
         }
         newPost.style.animation = "slideIn 0.5s ease-out";
 
-        wallContainer.replaceChild(newPost, secondPost);
+        wallContainer.replaceChild(newPost, postToReplace);
     }, 500);
 }
 
@@ -255,10 +383,14 @@ if (links.length > 1) {
 }
 
 // Initial render
-renderTwoPosts(0);
+if (wallPosts.length > 0) {
+    renderTwoPosts(0);
 
-// Start rotation every 15 seconds
-rotationInterval = setInterval(rotatePosts, 5000);
+    // Start rotation every 5 seconds, alternating between both posts
+    rotationInterval = setInterval(rotatePosts, 1000);
+} else {
+    console.warn("No wall posts to display");
+}
 
 
 // Only data fullscreen

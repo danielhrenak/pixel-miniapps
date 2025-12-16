@@ -65,6 +65,8 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/tv', ['controller' => 'Monitoring', 'action' => 'index']);
         $builder->connect('/tv/{screen_id}', ['controller' => 'Monitoring', 'action' => 'screen'], ['_name' => 'monitoring_screen'])->setPass(['screen_id']);
         $builder->connect('/tv-app/{screen_id}', ['controller' => 'TvApp', 'action' => 'view'], ['_name' => 'tvapp_view'])->setPass(['screen_id']);
+        $builder->connect('/tv-app/{screen_id}/admin/add', ['controller' => 'TvAppAdmin', 'action' => 'add'], ['_name' => 'tvapp_admin_add'])->setPass(['screen_id']);
+        $builder->connect('/tv-app/{screen_id}/admin', ['controller' => 'TvAppAdmin', 'action' => 'index'], ['_name' => 'tvapp_admin_index'])->setPass(['screen_id']);
 
         /*
          * Connect catchall routes for all controllers.
