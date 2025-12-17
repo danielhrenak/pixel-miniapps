@@ -172,14 +172,6 @@ function renderTwoPosts(startIdx) {
         const post = document.createElement("div");
         post.className = "wall-post";
 
-        // Add timestamp
-        if (p.created) {
-            const timestamp = document.createElement("div");
-            timestamp.className = "post-timestamp";
-            timestamp.textContent = formatTimeAgo(p.created);
-            post.appendChild(timestamp);
-        }
-
         if (p.image) {
             const imgWrapper = document.createElement("div");
             imgWrapper.className = "image-wrapper";
@@ -277,12 +269,12 @@ function rotatePosts() {
         newPost.className = "wall-post";
 
         // Add timestamp
-        if (p.created) {
-            const timestamp = document.createElement("div");
-            timestamp.className = "post-timestamp";
-            timestamp.textContent = formatTimeAgo(p.created);
-            newPost.appendChild(timestamp);
-        }
+        // if (p.created) {
+        //     const timestamp = document.createElement("div");
+        //     timestamp.className = "post-timestamp";
+        //     timestamp.textContent = formatTimeAgo(p.created);
+        //     newPost.appendChild(timestamp);
+        // }
 
         if (p.image) {
             const imgWrapper = document.createElement("div");

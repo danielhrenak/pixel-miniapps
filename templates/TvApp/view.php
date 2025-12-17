@@ -51,7 +51,7 @@
     // Data from controller
     window.tvAppData = <?= json_encode(['links' => $links, 'announcements' => $announcements, 'wallPosts' => $wallPosts]) ?>;
 </script>
-<script src="/js/tv-app/script.js"></script>
+<script src="/js/tv-app/script.js?v=1"></script>
 <script src="/js/tv-app/snow.js"></script>
 
 </body>
