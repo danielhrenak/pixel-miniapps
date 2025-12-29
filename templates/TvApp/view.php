@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Team TV Dashboard</title>
-    <link rel="stylesheet" href="/css/tv-app/style.css?v=4.0">
+    <link rel="stylesheet" href="/css/tv-app/style.css?v=5.0">
     <link rel="stylesheet" href="/css/tv-app/snow.css?v=4.0">
 </head>
 <body>
