@@ -8,6 +8,8 @@ class TvAppController extends AppController
 {
     public function view ($screen_id)
     {
+        return false;
+
         $this->viewBuilder()->enableAutoLayout(false);
 
         // Load data from tables/API

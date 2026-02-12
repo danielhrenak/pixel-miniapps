@@ -9,6 +9,8 @@ class TvAppAdminController extends AppController
 
     public function index()
     {
+        return false;
+
         $this->viewBuilder()->enableAutoLayout(false);
 
         $postsTable = TableRegistry::getTableLocator()->get('Posts');
