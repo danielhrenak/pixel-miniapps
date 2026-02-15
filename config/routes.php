@@ -49,6 +49,14 @@ return function (RouteBuilder $routes): void {
      */
     $routes->setRouteClass(DashedRoute::class);
 
+    // ShareLoop routes
+    $routes->scope('/shareloop', function (RouteBuilder $builder): void {
+        $builder->setRouteClass(DashedRoute::class);
+        $builder->connect('/', ['controller' => 'ShareloopBooks', 'action' => 'index']);
+        $builder->connect('/{controller}', ['action' => 'index']);
+        $builder->connect('/{controller}/{action}/*', []);
+    });
+
     $routes->scope('/', function (RouteBuilder $builder): void {
         /*
          * Here, we are connecting '/' (base path) to a controller called 'Pages',
