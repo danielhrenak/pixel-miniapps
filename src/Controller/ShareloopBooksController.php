@@ -19,6 +19,14 @@ class ShareloopBooksController extends AppController
         $this->Authentication->allowUnauthenticated(['index', 'view', 'search']);
     }
 
+    public function beforeRender(\Cake\Event\EventInterface $event)
+    {
+        parent::beforeRender($event);
+
+        // Use the shareloop layout from templates/layout/shareloop.php
+        $this->viewBuilder()->setLayout('shareloop');
+    }
+
     /**
      * Index - Browse all books
      */

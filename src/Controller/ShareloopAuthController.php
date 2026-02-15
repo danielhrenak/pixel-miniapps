@@ -21,6 +21,14 @@ class ShareloopAuthController extends AppController
         $this->Authentication->allowUnauthenticated(['register', 'verify', 'login']);
     }
 
+    public function beforeRender(\Cake\Event\EventInterface $event)
+    {
+        parent::beforeRender($event);
+
+        // Use the shareloop layout from templates/layout/shareloop.php
+        $this->viewBuilder()->setLayout('shareloop');
+    }
+
     /**
      * Register - GET form or POST register
      */

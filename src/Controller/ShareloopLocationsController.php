@@ -10,6 +10,14 @@ namespace App\Controller;
  */
 class ShareloopLocationsController extends AppController
 {
+    public function beforeRender(\Cake\Event\EventInterface $event)
+    {
+        parent::beforeRender($event);
+
+        // Use the shareloop layout from templates/layout/shareloop.php
+        $this->viewBuilder()->setLayout('shareloop');
+    }
+
     /**
      * List user's locations
      */
