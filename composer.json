@@ -5,7 +5,7 @@
     "type": "project",
     "homepage": "https://cakephp.org",
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.2",
         "cakephp/cakephp": "5.2.*",
         "cakephp/migrations": "^4.0.0",
         "cakephp/plugin-installer": "^2.0",
@@ -41,7 +41,10 @@
             "dealerdirect/phpcodesniffer-composer-installer": true
         },
         "platform-check": true,
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2.0"
+        }
     },
     "scripts": {
         "post-install-cmd": "App\\Console\\Installer::postInstall",
