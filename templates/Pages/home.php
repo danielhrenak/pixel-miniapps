@@ -2,5 +2,7 @@
 // templates/Pages/home.php
 ?>
 <div>
-    empty
+    <a href="/abc">
+        <button>ABC</button>
+    </a>
 </div>

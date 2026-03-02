@@ -27,9 +27,6 @@ use Cake\Http\MiddlewareQueue;
 use Cake\ORM\Locator\TableLocator;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
-use Authentication\Middleware\AuthenticationMiddleware;
-use Authentication\AuthenticationService;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Application setup class.
@@ -39,7 +36,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * @extends \Cake\Http\BaseApplication<\App\Application>
  */
-class Application extends BaseApplication implements \Authentication\AuthenticationServiceProviderInterface
+class Application extends BaseApplication
 {
     /**
      * Load all the application configuration and bootstrap logic.
@@ -86,10 +83,6 @@ class Application extends BaseApplication implements \Authentication\Authenticat
             // https://book.cakephp.org/5/en/controllers/middleware.html#body-parser-middleware
             ->add(new BodyParserMiddleware())
 
-            // Add Authentication Middleware
-            // https://book.cakephp.org/5/en/controller/middleware.html#authentication
-            ->add(new AuthenticationMiddleware($this))
-
             // Cross Site Request Forgery (CSRF) Protection Middleware
             // https://book.cakephp.org/5/en/security/csrf.html#cross-site-request-forgery-csrf-middleware
             ->add(new CsrfProtectionMiddleware([
@@ -109,34 +102,5 @@ class Application extends BaseApplication implements \Authentication\Authenticat
     public function services(ContainerInterface $container): void
     {
         // Authentication service will be auto-wired by the middleware
-    }
-
-    /**
-     * Returns a service provider instance.
-     *
-     * @param \Psr\Http\Message\ServerRequestInterface $request Server request
-     * @return \Authentication\AuthenticationServiceInterface
-     */
-    public function getAuthenticationService(ServerRequestInterface $request): \Authentication\AuthenticationServiceInterface
-    {
-        $authenticationService = new AuthenticationService([
-            'unauthenticatedRedirect' => '/shareloop/auth/login',
-            'queryParam' => 'redirect',
-        ]);
-
-        // Load the Form authenticator
-        $authenticationService->loadAuthenticator('Authentication.Form', [
-            'fields' => [
-                'username' => 'email',
-                'password' => 'password',
-            ],
-            'loginUrl' => '/shareloop/auth/login',
-            'resolver' => [
-                'className' => 'Orm',
-                'userModel' => 'ShareloopUsers',
-            ],
-        ]);
-
-        return $authenticationService;
     }
 }

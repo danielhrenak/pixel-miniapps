@@ -31,10 +31,6 @@ return [
     'DebugKit' => ['onlyDebug' => true],
     'Bake' => ['onlyCli' => true, 'optional' => true],
     'Migrations' => ['onlyCli' => true],
-    'ShareLoop' => [],
-
-    // Load the Authentication plugin
-    'Authentication' => ['bootstrap' => true, 'routes' => true],
 
     // Additional plugins here
 ];
