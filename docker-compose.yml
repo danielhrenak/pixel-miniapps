@@ -3,6 +3,7 @@ version: '3.9'
 services:
   php-fpm:
     image: webdevops/php-nginx:8.4
+    platform: "linux/amd64"  # <--- temporary override to avoid platform mismatch on M1/M2 (remove when using native arm64 image)
     container_name: pixel-miniapps-webserver
     working_dir: /app
     volumes:
