@@ -49,9 +49,4 @@ class AppController extends Controller
          */
         //$this->loadComponent('FormProtection');
     }
-
-    public function abc(): void
-    {
-        $this->viewBuilder()->disableAutoLayout();
-    }
 }

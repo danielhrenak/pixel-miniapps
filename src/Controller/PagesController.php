@@ -70,4 +70,14 @@ class PagesController extends AppController
             throw new NotFoundException();
         }
     }
+
+    public function abc(): void
+    {
+        $this->viewBuilder()->disableAutoLayout();
+    }
+
+    public function abcgame(): void
+    {
+        $this->viewBuilder()->disableAutoLayout();
+    }
 }
