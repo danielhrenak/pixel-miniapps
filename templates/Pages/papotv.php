@@ -9,9 +9,11 @@
         body { background-color: black; color: white; overflow: hidden; font-family: sans-serif; }
         .transition-opacity { transition: opacity 1000ms; }
         .hidden { display: none; }
+        #error-msg { position: absolute; top: 1rem; left: 1rem; color: #ff4444; font-size: 0.75rem; z-index: 100; pointer-events: none; }
     </style>
 </head>
 <body class="bg-black text-white overflow-hidden">
+<div id="error-msg" class="opacity-0 transition-opacity">Chyba načítania súboru, preskakujem...</div>
 <div id="slideshow-container" class="relative w-full h-screen">
     <!-- Background Blur -->
     <div id="bg-blur" class="absolute inset-0 bg-cover bg-center scale-110 blur-2xl opacity-50 transition-opacity"></div>
@@ -19,7 +21,7 @@
 
     <!-- Main Content -->
     <div class="absolute inset-0 flex items-center justify-center p-4">
-        <img id="main-image" src="" alt="" class="max-w-full max-h-full object-contain shadow-2xl z-10 transition-opacity opacity-0" />
+        <img id="main-image" src="" alt="" referrerPolicy="no-referrer" class="max-w-full max-h-full object-contain shadow-2xl z-10 transition-opacity opacity-0" />
         <video id="main-video" class="max-w-full max-h-full object-contain shadow-2xl z-10 transition-opacity opacity-0 hidden" autoplay muted playsinline></video>
     </div>
 
@@ -60,15 +62,21 @@
 
 <script>
     const DEFAULT_IMAGES = [
-        'https://picsum.photos/seed/nature1/1920/1080',
-        'https://picsum.photos/seed/nature2/1920/1080',
-        'https://picsum.photos/seed/nature3/1920/1080',
-        'https://picsum.photos/seed/nature4/1920/1080',
+        'https://drive.google.com/uc?export=download&id=10dqXgAsW4-LwGsgy4xMy5OeLB07JV0uj',
+        'https://drive.google.com/uc?export=download&id=1521aQlXCx0lj9IA7oQRPaQUxaWVnWpze',
+        'https://drive.google.com/uc?export=download&id=1GTqyBu1AlyH6EjplZJRoxy3deN-B4Cyz',
+        'https://drive.google.com/uc?export=download&id=1Lo8bFl3hGhBdrjtQXeCHwFcm0ONqQ3XM',
+        'https://drive.google.com/uc?export=download&id=1j0G3uJxUq-2Y4eYTO8CX6HtAR2gPYjTD',
+        'https://drive.google.com/uc?export=download&id=1lwG51G8GKhv0sSzliZUYRFfd0bJFhFPO',
+        'https://drive.google.com/uc?export=download&id=1nwu0XuFrCzzz9-7x7e6CAxpKxk3A8PVC',
+        'https://drive.google.com/uc?export=download&id=1poWKQSgzO1S0JqcdUE66USauAEzp0rPH',
+        'https://drive.google.com/uc?export=download&id=1tp6x9SYWnbTHc2BTpvUUj12Ih0SSJ5gc'
     ];
 
     let images = JSON.parse(localStorage.getItem('slideshow-images') || JSON.stringify(DEFAULT_IMAGES));
     let currentIndex = 0;
     let rotationInterval = null;
+    let errorTimeout = null;
     const ROTATION_TIME = 30000;
 
     const bgBlur = document.getElementById('bg-blur');
@@ -76,6 +84,7 @@
     const mainImage = document.getElementById('main-image');
     const mainVideo = document.getElementById('main-video');
     const progressBar = document.getElementById('progress-bar');
+    const errorMsg = document.getElementById('error-msg');
     const settingsBtn = document.getElementById('settings-btn');
     const modal = document.getElementById('modal');
     const closeModal = document.getElementById('close-modal');
@@ -84,7 +93,26 @@
     const fileInput = document.getElementById('file-input');
 
     function isVideo(url) {
-        return url.toLowerCase().endsWith('.mp4') || url.startsWith('data:video/mp4');
+        return url.toLowerCase().includes('.mp4') || url.startsWith('data:video/mp4');
+    }
+
+    function transformUrl(url) {
+        // Transform Google Drive links to a more reliable embed format
+        const driveMatch = url.match(/(?:drive\.google\.com\/(?:uc\?export=download&id=|file\/d\/)|id=)([\w-]+)/);
+        if (driveMatch && driveMatch[1]) {
+            // Using the thumbnail endpoint with large size is often more reliable for images
+            return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1920`;
+        }
+        return url;
+    }
+
+    function showError() {
+        errorMsg.style.opacity = '1';
+        clearTimeout(errorTimeout);
+        errorTimeout = setTimeout(() => {
+            errorMsg.style.opacity = '0';
+            nextImage();
+        }, 3000);
     }
 
     function updateSlideshow() {
@@ -97,8 +125,11 @@
             return;
         }
 
-        const url = images[currentIndex];
-        const isVid = isVideo(url);
+        let url = images[currentIndex];
+        const originalUrl = url;
+        url = transformUrl(url);
+
+        const isVid = isVideo(originalUrl);
 
         mainImage.style.opacity = '0';
         mainVideo.style.opacity = '0';
@@ -111,12 +142,18 @@
                 mainVideo.src = url;
                 bgVideo.src = url;
 
-                mainVideo.play().catch(() => {});
-                bgVideo.play().catch(() => {});
+                mainVideo.play().catch((err) => {
+                    console.error("Video play failed:", err);
+                    showError();
+                });
 
                 mainVideo.onloadeddata = () => {
                     mainVideo.style.opacity = '1';
                     bgVideo.style.opacity = '0.5';
+                };
+                mainVideo.onerror = (e) => {
+                    console.error("Video error:", e);
+                    showError();
                 };
                 bgBlur.style.backgroundImage = 'none';
             } else {
@@ -129,6 +166,10 @@
 
                 mainImage.onload = () => {
                     mainImage.style.opacity = '1';
+                };
+                mainImage.onerror = (e) => {
+                    console.error("Image load failed for URL:", url, e);
+                    showError();
                 };
             }
         }, 500);
