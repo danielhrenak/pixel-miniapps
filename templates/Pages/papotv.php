@@ -21,6 +21,9 @@
 
     <!-- Main Content -->
     <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div id="loading-indicator" class="absolute inset-0 flex items-center justify-center z-40 opacity-0 transition-opacity pointer-events-none">
+            <div class="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+        </div>
         <img id="main-image" src="" alt="" referrerPolicy="no-referrer" class="max-w-full max-h-full object-contain shadow-2xl z-10 transition-opacity opacity-0" />
         <video id="main-video" class="max-w-full max-h-full object-contain shadow-2xl z-10 transition-opacity opacity-0 hidden" autoplay muted playsinline></video>
     </div>
@@ -85,6 +88,7 @@
     const mainVideo = document.getElementById('main-video');
     const progressBar = document.getElementById('progress-bar');
     const errorMsg = document.getElementById('error-msg');
+    const loadingIndicator = document.getElementById('loading-indicator');
     const settingsBtn = document.getElementById('settings-btn');
     const modal = document.getElementById('modal');
     const closeModal = document.getElementById('close-modal');
@@ -108,6 +112,7 @@
 
     function showError() {
         errorMsg.style.opacity = '1';
+        loadingIndicator.style.opacity = '0';
         clearTimeout(errorTimeout);
         errorTimeout = setTimeout(() => {
             errorMsg.style.opacity = '0';
@@ -122,6 +127,7 @@
             bgVideo.style.opacity = '0';
             mainVideo.classList.add('hidden');
             bgBlur.style.backgroundImage = 'none';
+            loadingIndicator.style.opacity = '0';
             return;
         }
 
@@ -134,6 +140,7 @@
         mainImage.style.opacity = '0';
         mainVideo.style.opacity = '0';
         bgVideo.style.opacity = '0';
+        loadingIndicator.style.opacity = '1';
 
         setTimeout(() => {
             if (isVid) {
@@ -150,6 +157,7 @@
                 mainVideo.onloadeddata = () => {
                     mainVideo.style.opacity = '1';
                     bgVideo.style.opacity = '0.5';
+                    loadingIndicator.style.opacity = '0';
                 };
                 mainVideo.onerror = (e) => {
                     console.error("Video error:", e);
@@ -166,6 +174,7 @@
 
                 mainImage.onload = () => {
                     mainImage.style.opacity = '1';
+                    loadingIndicator.style.opacity = '0';
                 };
                 mainImage.onerror = (e) => {
                     console.error("Image load failed for URL:", url, e);
