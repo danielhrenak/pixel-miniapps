@@ -75,6 +75,10 @@ class PagesController extends AppController
     {
         $this->viewBuilder()->disableAutoLayout();
     }
+    public function papotv(): void
+    {
+        $this->viewBuilder()->disableAutoLayout();
+    }
 
     public function abcgame(): void
     {

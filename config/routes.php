@@ -57,6 +57,7 @@ return function (RouteBuilder $routes): void {
          */
         $builder->connect('/', ['controller' => 'Pages', 'action' => 'display', 'home']);
         $builder->connect('/abc', ['controller' => 'Pages', 'action' => 'display', 'abc'], ['_name' => 'abc']);
+        $builder->connect('/papotv', ['controller' => 'Pages', 'action' => 'display', 'papotv'], ['_name' => 'papotv']);
         $builder->connect('/abcgame', ['controller' => 'Pages', 'action' => 'display', 'abcgame'], ['_name' => 'abcgame']);
 
         /*
