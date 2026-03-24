@@ -14,6 +14,20 @@
 </head>
 <body class="bg-black text-white overflow-hidden">
 <div id="error-msg" class="opacity-0 transition-opacity">Chyba načítania súboru, preskakujem...</div>
+
+<!-- Autoplay Unlock Overlay -->
+<div id="unlock-overlay" class="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center cursor-pointer transition-opacity duration-500">
+    <div class="p-8 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 flex flex-col items-center space-y-6 hover:bg-white/20 transition-all">
+        <div class="w-20 h-20 bg-white text-black rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="m7 4 12 8-12 8V4z"/></svg>
+        </div>
+        <div class="text-center">
+            <h1 class="text-2xl font-bold mb-2">Spustiť Slideshow</h1>
+            <p class="text-zinc-400">Kliknite pre spustenie automatického prehrávania</p>
+        </div>
+    </div>
+</div>
+
 <div id="slideshow-container" class="relative w-full h-screen">
     <!-- Background Blur -->
     <div id="bg-blur" class="absolute inset-0 bg-cover bg-center scale-110 blur-2xl opacity-50 transition-opacity"></div>
@@ -97,20 +111,27 @@
     const saveBtn = document.getElementById('save-btn');
     const urlInput = document.getElementById('url-input');
     const fileInput = document.getElementById('file-input');
+    const unlockOverlay = document.getElementById('unlock-overlay');
 
     function isVideo(url) {
         const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
-        return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('data:video/');
+        const isVidExt = videoExtensions.some(ext => url.toLowerCase().includes(ext));
+        const isDataVid = url.startsWith('data:video/');
+        return isVidExt || isDataVid;
     }
 
     function transformUrl(url) {
-        // Don't transform if it's already identified as a video
+        // Don't transform if it's already identified as a video extension
         if (isVideo(url)) return url;
 
         // Transform Google Drive links to a more reliable embed format for images
         const driveMatch = url.match(/(?:drive\.google\.com\/(?:uc\?export=download&id=|file\/d\/)|id=)([\w-]+)/);
         if (driveMatch && driveMatch[1]) {
-            // Using the thumbnail endpoint with large size is often more reliable for images
+            // If the user hasn't explicitly said it's a video, we assume image for the thumbnail optimization
+            // But we'll allow a override if they add #video to the end
+            if (url.includes('#video')) {
+                return `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
+            }
             return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1920`;
         }
         return url;
@@ -122,7 +143,7 @@
             const nextIdx = (currentIndex + i) % images.length;
             const originalUrl = images[nextIdx];
             const url = transformUrl(originalUrl);
-            const isVid = isVideo(originalUrl);
+            const isVid = isVideo(originalUrl) || originalUrl.includes('#video');
 
             if (!preloadedElements.has(url)) {
                 if (isVid) {
@@ -165,7 +186,7 @@
         const originalUrl = url;
         url = transformUrl(url);
 
-        const isVid = isVideo(originalUrl);
+        const isVid = isVideo(originalUrl) || originalUrl.includes('#video');
 
         mainImage.style.opacity = '0';
         mainVideo.style.opacity = '0';
@@ -185,6 +206,8 @@
                 // Reset and load
                 mainVideo.pause();
                 bgVideo.pause();
+                mainVideo.muted = true;
+                bgVideo.muted = true;
                 mainVideo.src = url;
                 bgVideo.src = url;
                 mainVideo.load();
@@ -196,7 +219,12 @@
                         bgVideo.play().catch(() => {});
                     }).catch((err) => {
                         console.error("Video play failed:", err);
-                        showError();
+                        // If it fails, maybe it's actually an image that was misidentified
+                        if (!originalUrl.includes('#video')) {
+                            tryAsImage(url);
+                        } else {
+                            showError();
+                        }
                     });
                 }
 
@@ -212,22 +240,7 @@
                 };
                 bgBlur.style.backgroundImage = 'none';
             } else {
-                mainVideo.classList.add('hidden');
-                mainVideo.pause();
-                bgVideo.pause();
-                mainImage.classList.remove('hidden');
-                mainImage.src = url;
-                bgBlur.style.backgroundImage = `url(${url})`;
-
-                mainImage.onload = () => {
-                    mainImage.style.opacity = '1';
-                    loadingIndicator.style.opacity = '0';
-                    preloadNext();
-                };
-                mainImage.onerror = (e) => {
-                    console.error("Image load failed for URL:", url, e);
-                    showError();
-                };
+                tryAsImage(url);
             }
         }, 500);
 
@@ -236,6 +249,25 @@
         progressBar.offsetHeight;
         progressBar.style.transition = `width ${ROTATION_TIME}ms linear`;
         progressBar.style.width = '100%';
+    }
+
+    function tryAsImage(url) {
+        mainVideo.classList.add('hidden');
+        mainVideo.pause();
+        bgVideo.pause();
+        mainImage.classList.remove('hidden');
+        mainImage.src = url;
+        bgBlur.style.backgroundImage = `url(${url})`;
+
+        mainImage.onload = () => {
+            mainImage.style.opacity = '1';
+            loadingIndicator.style.opacity = '0';
+            preloadNext();
+        };
+        mainImage.onerror = (e) => {
+            console.error("Image load failed for URL:", url, e);
+            showError();
+        };
     }
 
     function nextImage() {
@@ -249,6 +281,17 @@
         updateSlideshow();
         rotationInterval = setInterval(nextImage, ROTATION_TIME);
     }
+
+    unlockOverlay.addEventListener('click', () => {
+        unlockOverlay.style.opacity = '0';
+        setTimeout(() => {
+            unlockOverlay.classList.add('hidden');
+            startSlideshow();
+        }, 500);
+    });
+
+    // Removed automatic start
+    // startSlideshow();
 
     settingsBtn.addEventListener('click', () => {
         urlInput.value = images.join(', ');
