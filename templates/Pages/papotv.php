@@ -81,6 +81,8 @@
     let rotationInterval = null;
     let errorTimeout = null;
     const ROTATION_TIME = 30000;
+    const PRELOAD_COUNT = 3; // Number of items to preload ahead
+    const preloadedElements = new Map(); // Cache for preloaded elements
 
     const bgBlur = document.getElementById('bg-blur');
     const bgVideo = document.getElementById('bg-video');
@@ -97,17 +99,45 @@
     const fileInput = document.getElementById('file-input');
 
     function isVideo(url) {
-        return url.toLowerCase().includes('.mp4') || url.startsWith('data:video/mp4');
+        const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+        return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('data:video/');
     }
 
     function transformUrl(url) {
-        // Transform Google Drive links to a more reliable embed format
+        // Don't transform if it's already identified as a video
+        if (isVideo(url)) return url;
+
+        // Transform Google Drive links to a more reliable embed format for images
         const driveMatch = url.match(/(?:drive\.google\.com\/(?:uc\?export=download&id=|file\/d\/)|id=)([\w-]+)/);
         if (driveMatch && driveMatch[1]) {
             // Using the thumbnail endpoint with large size is often more reliable for images
             return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1920`;
         }
         return url;
+    }
+
+    function preloadNext() {
+        if (images.length <= 1) return;
+        for (let i = 1; i <= PRELOAD_COUNT; i++) {
+            const nextIdx = (currentIndex + i) % images.length;
+            const originalUrl = images[nextIdx];
+            const url = transformUrl(originalUrl);
+            const isVid = isVideo(originalUrl);
+
+            if (!preloadedElements.has(url)) {
+                if (isVid) {
+                    const v = document.createElement('video');
+                    v.preload = 'auto';
+                    v.src = url;
+                    v.muted = true;
+                    preloadedElements.set(url, v);
+                } else {
+                    const img = new Image();
+                    img.src = url;
+                    preloadedElements.set(url, img);
+                }
+            }
+        }
     }
 
     function showError() {
@@ -140,24 +170,41 @@
         mainImage.style.opacity = '0';
         mainVideo.style.opacity = '0';
         bgVideo.style.opacity = '0';
-        loadingIndicator.style.opacity = '1';
+
+        // If already preloaded, we might show it faster
+        const isPreloaded = preloadedElements.has(url);
+        if (!isPreloaded) {
+            loadingIndicator.style.opacity = '1';
+        }
 
         setTimeout(() => {
             if (isVid) {
                 mainImage.classList.add('hidden');
                 mainVideo.classList.remove('hidden');
+
+                // Reset and load
+                mainVideo.pause();
+                bgVideo.pause();
                 mainVideo.src = url;
                 bgVideo.src = url;
+                mainVideo.load();
+                bgVideo.load();
 
-                mainVideo.play().catch((err) => {
-                    console.error("Video play failed:", err);
-                    showError();
-                });
+                const playPromise = mainVideo.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        bgVideo.play().catch(() => {});
+                    }).catch((err) => {
+                        console.error("Video play failed:", err);
+                        showError();
+                    });
+                }
 
                 mainVideo.onloadeddata = () => {
                     mainVideo.style.opacity = '1';
                     bgVideo.style.opacity = '0.5';
                     loadingIndicator.style.opacity = '0';
+                    preloadNext();
                 };
                 mainVideo.onerror = (e) => {
                     console.error("Video error:", e);
@@ -175,6 +222,7 @@
                 mainImage.onload = () => {
                     mainImage.style.opacity = '1';
                     loadingIndicator.style.opacity = '0';
+                    preloadNext();
                 };
                 mainImage.onerror = (e) => {
                     console.error("Image load failed for URL:", url, e);
