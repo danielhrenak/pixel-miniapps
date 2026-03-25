@@ -78,6 +78,273 @@ class PagesController extends AppController
     public function papotv(): void
     {
         $this->viewBuilder()->disableAutoLayout();
+
+        $serverItems = $this->getPapotVSlideShowItems();
+        $this->set('serverItemsJson', json_encode($serverItems, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    }
+
+    private function getPapotVSlideShowItems(): array
+    {
+        $gistApiUrl = 'https://api.github.com/gists/009f73574dc9efa5a00f65777f9d1a8f';
+        $defaultItems = [
+            [
+                'url' => 'https://blog.helveti.cz/wpobsah/uploads/2019/03/postapo.jpg',
+                'renderUrl' => 'https://blog.helveti.cz/wpobsah/uploads/2019/03/postapo.jpg',
+                'type' => 'image',
+                'mimeType' => 'image/jpeg',
+            ],
+        ];
+
+        $serverItems = [];
+        $httpContext = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => "User-Agent: pixel-miniapps-papotv\r\nAccept: application/vnd.github+json\r\n",
+                'timeout' => 8,
+            ],
+        ]);
+        $payloadRaw = @file_get_contents($gistApiUrl, false, $httpContext);
+
+        if (is_string($payloadRaw) && $payloadRaw !== '') {
+            $payload = json_decode($payloadRaw, true);
+
+            if (is_array($payload) && isset($payload['files']) && is_array($payload['files'])) {
+                $rawCollected = [];
+
+                foreach ($payload['files'] as $file) {
+                    if (!is_array($file) || !isset($file['content']) || !is_string($file['content'])) {
+                        continue;
+                    }
+
+                    $content = trim($file['content']);
+                    if ($content === '') {
+                        continue;
+                    }
+
+                    $parsed = json_decode($content, true);
+                    if (is_array($parsed)) {
+                        $this->appendParsedItems($parsed, $rawCollected);
+                    } else {
+                        foreach ($this->extractUrlsFromText($content) as $url) {
+                            $rawCollected[] = $url;
+                        }
+                    }
+                }
+
+                $seen = [];
+                foreach ($rawCollected as $rawItem) {
+                    $normalized = $this->normalizeServerItem($rawItem);
+                    if ($normalized === null) {
+                        continue;
+                    }
+
+                    $signature = sprintf('%s|%s', $normalized['url'], $normalized['type']);
+                    if (isset($seen[$signature])) {
+                        continue;
+                    }
+
+                    $seen[$signature] = true;
+                    $serverItems[] = $normalized;
+                }
+            }
+        }
+
+        return $serverItems === [] ? $defaultItems : $serverItems;
+    }
+
+    private function normalizeServerItem(mixed $raw): ?array
+    {
+        $url = null;
+        $explicitType = null;
+        $mimeType = null;
+
+        if (is_string($raw)) {
+            $url = trim($raw);
+        } elseif (is_array($raw)) {
+            foreach (['url', 'src', 'href', 'link'] as $urlKey) {
+                if (isset($raw[$urlKey]) && is_string($raw[$urlKey])) {
+                    $url = trim($raw[$urlKey]);
+                    break;
+                }
+            }
+
+            $explicitType = $this->normalizeExplicitMediaType(
+                $raw['type'] ?? $raw['mediaType'] ?? $raw['kind'] ?? $raw['mediaKind'] ?? $raw['format'] ?? null
+            );
+
+            if (isset($raw['mimeType']) && is_string($raw['mimeType'])) {
+                $mimeType = trim($raw['mimeType']);
+            } elseif (isset($raw['mime']) && is_string($raw['mime'])) {
+                $mimeType = trim($raw['mime']);
+            }
+        }
+
+        if (!is_string($url) || $url === '') {
+            return null;
+        }
+
+        $detectedType = $explicitType ?? $this->normalizeExplicitMediaType($mimeType);
+        $detectUrl = $this->isGoogleDriveUrl($url) ? $this->getDriveDirectLink($url) : $url;
+
+        if ($detectedType === null) {
+            if (str_starts_with($url, 'data:video/')) {
+                $detectedType = 'video';
+            } elseif (str_starts_with($url, 'data:image/')) {
+                $detectedType = 'image';
+            }
+        }
+
+        if ($detectedType === null) {
+            $remoteMime = $this->detectRemoteMimeType($detectUrl);
+            if (is_string($remoteMime) && $remoteMime !== '') {
+                $mimeType = $mimeType ?: $remoteMime;
+                $detectedType = str_starts_with(strtolower($remoteMime), 'video/') ? 'video' : 'image';
+            }
+        }
+
+        if ($detectedType === null) {
+            $lowerUrl = strtolower($url);
+            $detectedType = (str_contains($lowerUrl, '.mp4') || str_contains($lowerUrl, '.webm') || str_contains($lowerUrl, '.mov') || str_contains($lowerUrl, '.ogg'))
+                ? 'video'
+                : 'image';
+        }
+
+        $renderUrl = $url;
+        $fileId = $this->getGoogleDriveFileId($url);
+        if ($fileId !== null) {
+            if ($detectedType === 'video') {
+                $renderUrl = sprintf('https://drive.google.com/uc?export=download&id=%s', $fileId);
+            } else {
+                $renderUrl = sprintf('https://drive.google.com/uc?export=view&id=%s', $fileId);
+            }
+        }
+
+        return [
+            'url' => $url,
+            'renderUrl' => $renderUrl,
+            'type' => $detectedType,
+            'mimeType' => $mimeType,
+        ];
+    }
+
+    private function normalizeExplicitMediaType(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $normalized = strtolower(trim($value));
+        if ($normalized === '') {
+            return null;
+        }
+
+        if ($normalized === 'video' || str_starts_with($normalized, 'video/')) {
+            return 'video';
+        }
+        if ($normalized === 'image' || str_starts_with($normalized, 'image/')) {
+            return 'image';
+        }
+
+        return null;
+    }
+
+    private function isGoogleDriveUrl(string $url): bool
+    {
+        return str_contains($url, 'drive.google.com');
+    }
+
+    private function getGoogleDriveFileId(string $url): ?string
+    {
+        if (preg_match('#/d/([a-zA-Z0-9_-]+)#', $url, $m)) {
+            return $m[1];
+        }
+        if (preg_match('/[?&]id=([a-zA-Z0-9_-]+)/', $url, $m)) {
+            return $m[1];
+        }
+
+        return null;
+    }
+
+    private function getDriveDirectLink(string $shareUrl): string
+    {
+        if (!$this->isGoogleDriveUrl($shareUrl)) {
+            return $shareUrl;
+        }
+
+        $fileId = $this->getGoogleDriveFileId($shareUrl);
+        if ($fileId === null) {
+            return $shareUrl;
+        }
+
+        return sprintf('https://drive.google.com/uc?export=download&id=%s', $fileId);
+    }
+
+    private function detectRemoteMimeType(string $url): ?string
+    {
+        if (str_starts_with($url, 'data:')) {
+            return null;
+        }
+
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            if ($ch === false) {
+                return null;
+            }
+
+            curl_setopt_array($ch, [
+                CURLOPT_NOBODY => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_TIMEOUT => 8,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_USERAGENT => 'pixel-miniapps-papotv',
+            ]);
+
+            curl_exec($ch);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+            curl_close($ch);
+
+            return is_string($contentType) && $contentType !== '' ? $contentType : null;
+        }
+
+        return null;
+    }
+
+    private function extractUrlsFromText(string $text): array
+    {
+        preg_match_all('/https?:\/\/[^\s"\'<>\],]+/i', $text, $matches);
+
+        return $matches[0] ?? [];
+    }
+
+    private function appendParsedItems(mixed $parsedValue, array &$target): void
+    {
+        if (!is_array($parsedValue)) {
+            return;
+        }
+
+        if (array_is_list($parsedValue)) {
+            foreach ($parsedValue as $item) {
+                $target[] = $item;
+            }
+
+            return;
+        }
+
+        foreach (['url', 'src', 'href', 'link'] as $key) {
+            if (isset($parsedValue[$key]) && is_string($parsedValue[$key])) {
+                $target[] = $parsedValue;
+                break;
+            }
+        }
+
+        foreach (['urls', 'images', 'items', 'media'] as $key) {
+            if (isset($parsedValue[$key]) && is_array($parsedValue[$key])) {
+                foreach ($parsedValue[$key] as $item) {
+                    $target[] = $item;
+                }
+            }
+        }
     }
 
     public function abcgame(): void
