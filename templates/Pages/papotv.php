@@ -89,11 +89,14 @@
         'https://drive.google.com/uc?export=download&id=1poWKQSgzO1S0JqcdUE66USauAEzp0rPH',
         'https://drive.google.com/uc?export=download&id=1tp6x9SYWnbTHc2BTpvUUj12Ih0SSJ5gc'
     ];
+    const GIST_API_URL = 'https://api.github.com/gists/009f73574dc9efa5a00f65777f9d1a8f';
+    const PAGE_REFRESH_MS = 60 * 60 * 1000;
 
     let images = JSON.parse(localStorage.getItem('slideshow-images') || JSON.stringify(DEFAULT_IMAGES));
     let currentIndex = 0;
     let rotationInterval = null;
     let errorTimeout = null;
+    let isAutoplayUnlocked = false;
     const ROTATION_TIME = 30000;
     const PRELOAD_COUNT = 3; // Number of items to preload ahead
     const preloadedElements = new Map(); // Cache for preloaded elements
@@ -135,6 +138,68 @@
             return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1920`;
         }
         return url;
+    }
+
+    function extractUrlsFromText(text) {
+        const matches = text.match(/(?:https?:\/\/[^\s"'<>\],]+|data:image\/[a-zA-Z0-9.+-]+;base64,[^\s"'<>]+|data:video\/[a-zA-Z0-9.+-]+;base64,[^\s"'<>]+)/g) || [];
+        return matches.map(s => s.trim()).filter(Boolean);
+    }
+
+    function extractUrlsFromGistPayload(payload) {
+        if (!payload || !payload.files) return [];
+
+        const collected = [];
+        const fileEntries = Object.values(payload.files);
+
+        fileEntries.forEach((file) => {
+            if (!file || typeof file.content !== 'string') return;
+
+            const content = file.content.trim();
+            if (!content) return;
+
+            try {
+                const parsed = JSON.parse(content);
+                if (Array.isArray(parsed)) {
+                    parsed.forEach((item) => {
+                        if (typeof item === 'string') collected.push(item.trim());
+                    });
+                } else if (parsed && typeof parsed === 'object') {
+                    ['urls', 'images', 'items'].forEach((key) => {
+                        if (Array.isArray(parsed[key])) {
+                            parsed[key].forEach((item) => {
+                                if (typeof item === 'string') collected.push(item.trim());
+                            });
+                        }
+                    });
+                }
+            } catch (_err) {
+                extractUrlsFromText(content).forEach((url) => collected.push(url));
+            }
+        });
+
+        return [...new Set(collected.filter((item) => /^(https?:\/\/|data:image\/|data:video\/)/i.test(item)))];
+    }
+
+    async function loadImagesFromGistWithFallback() {
+        try {
+            const response = await fetch(GIST_API_URL, {
+                headers: { 'Accept': 'application/vnd.github+json' }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Gist fetch failed with status ${response.status}`);
+            }
+
+            const payload = await response.json();
+            const gistUrls = extractUrlsFromGistPayload(payload);
+            if (gistUrls.length > 0) {
+                return gistUrls;
+            }
+        } catch (err) {
+            console.warn('Gist loading failed, using fallback sources.', err);
+        }
+
+        return images;
     }
 
     function preloadNext() {
@@ -277,16 +342,76 @@
     }
 
     function startSlideshow() {
+        if (!isAutoplayUnlocked) return;
         if (rotationInterval) clearInterval(rotationInterval);
         updateSlideshow();
         rotationInterval = setInterval(nextImage, ROTATION_TIME);
     }
 
-    unlockOverlay.addEventListener('click', () => {
+    async function unlockMediaPlayback() {
+        // Prime muted playback in a user gesture context to satisfy stricter autoplay policies.
+        const primeVideo = async (videoEl) => {
+            const originalSrc = videoEl.getAttribute('src') || '';
+
+            try {
+                videoEl.muted = true;
+                videoEl.playsInline = true;
+                videoEl.setAttribute('muted', 'muted');
+                videoEl.setAttribute('playsinline', 'playsinline');
+
+                // Tiny silent video keeps payload negligible while unlocking media pipeline.
+                videoEl.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMQAAAAhmcmVlAAACQG1kYXQhEAUgpAAB9AAAB9AAAB9AAAB9AAAB9AAAB9AAAB9AAAB9AAAB9AAAB9A=';
+                videoEl.load();
+
+                const playPromise = videoEl.play();
+                if (playPromise !== undefined) {
+                    await playPromise;
+                }
+                videoEl.pause();
+            } catch (e) {
+                console.warn('Media unlock failed for one video element:', e);
+            } finally {
+                if (originalSrc) {
+                    videoEl.src = originalSrc;
+                    videoEl.load();
+                } else {
+                    videoEl.removeAttribute('src');
+                    videoEl.load();
+                }
+            }
+        };
+
+        await Promise.all([primeVideo(mainVideo), primeVideo(bgVideo)]);
+    }
+
+    function startHourlyPageRefresh() {
+        setInterval(() => {
+            window.location.reload();
+        }, PAGE_REFRESH_MS);
+    }
+
+    async function initializeSlideshow() {
+        startHourlyPageRefresh();
+
+        const gistImages = await loadImagesFromGistWithFallback();
+        if (Array.isArray(gistImages) && gistImages.length > 0) {
+            images = gistImages;
+            localStorage.setItem('slideshow-images', JSON.stringify(images));
+            currentIndex = 0;
+            if (isAutoplayUnlocked) {
+                startSlideshow();
+            }
+        }
+    }
+
+    unlockOverlay.addEventListener('click', async () => {
+        isAutoplayUnlocked = true;
+        await unlockMediaPlayback();
+        startSlideshow();
+
         unlockOverlay.style.opacity = '0';
         setTimeout(() => {
             unlockOverlay.classList.add('hidden');
-            startSlideshow();
         }, 500);
     });
 
@@ -331,7 +456,7 @@
         });
     });
 
-    startSlideshow();
+    initializeSlideshow();
 </script>
 </body>
 </html>
