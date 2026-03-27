@@ -57,8 +57,11 @@ return function (RouteBuilder $routes): void {
          */
         $builder->connect('/', ['controller' => 'Pages', 'action' => 'display', 'home']);
         $builder->connect('/abc', ['controller' => 'Pages', 'action' => 'display', 'abc'], ['_name' => 'abc']);
-        $builder->connect('/papotv', ['controller' => 'Pages', 'action' => 'display', 'papotv'], ['_name' => 'papotv']);
         $builder->connect('/abcgame', ['controller' => 'Pages', 'action' => 'display', 'abcgame'], ['_name' => 'abcgame']);
+        $builder->connect('/papotv', ['controller' => 'Papo', 'action' => 'papotv'], ['_name' => 'papotv']);
+        $builder->connect('/papotv/item', ['controller' => 'Papo', 'action' => 'item'], ['_name' => 'papotv_item']);
+        $builder->connect('/papotv/image/{fileId}', ['controller' => 'Papo', 'action' => 'image'], ['_name' => 'papotv_image'])->setPass(['fileId']);
+        $builder->connect('/papotv/video/{fileId}', ['controller' => 'Papo', 'action' => 'video'], ['_name' => 'papotv_video'])->setPass(['fileId']);
 
         /*
          * ...and connect the rest of 'Pages' controller's URLs.
