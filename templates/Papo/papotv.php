@@ -56,7 +56,7 @@
     const TOTAL_ITEMS = <?= (int)($totalItems ?? 0) ?>;
     const SLIDE_ENDPOINT = <?= json_encode($slideEndpoint ?? '', JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
     const PAGE_REFRESH_MS = 60 * 60 * 1000;
-    const ROTATION_TIME = 3000;
+    const ROTATION_TIME = 30000;
 
     let currentItem = normalizeSlideItem(INITIAL_ITEM);
     let currentIndex = INITIAL_INDEX;
