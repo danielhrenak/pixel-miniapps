@@ -248,11 +248,22 @@
                 mainVideo.load();
                 bgVideo.load();
 
+                const resolvedVideoUrl = new URL(url, window.location.href).href;
+
                 const playPromise = mainVideo.play();
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
                         bgVideo.play().catch(() => {});
                     }).catch((err) => {
+                        const isAbortError = err && (
+                            err.name === 'AbortError' ||
+                            String(err.message || '').toLowerCase().includes('aborted')
+                        );
+                        const isStaleEvent = mainVideo.currentSrc && mainVideo.currentSrc !== resolvedVideoUrl;
+                        if (isAbortError || isStaleEvent) {
+                            return;
+                        }
+
                         console.error('Video play failed:', err);
                         tryAsImage(url);
                     });
@@ -265,6 +276,11 @@
                     void queueNextSlide();
                 };
                 mainVideo.onerror = (e) => {
+                    const isStaleEvent = mainVideo.currentSrc && mainVideo.currentSrc !== resolvedVideoUrl;
+                    if (isStaleEvent) {
+                        return;
+                    }
+
                     console.error('Video error:', e);
                     tryAsImage(url);
                 };

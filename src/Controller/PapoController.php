@@ -70,7 +70,7 @@ class PapoController extends AppController
 
     public function image(string $fileId): Response
     {
-        $this->request->allowMethod(['get']);
+        $this->request->allowMethod(['get', 'head']);
 
         if (!preg_match('/^[a-zA-Z0-9_-]+$/', $fileId)) {
             throw new NotFoundException();
@@ -96,32 +96,31 @@ class PapoController extends AppController
             throw new NotFoundException();
         }
 
-        return $this->response
+        $response = $this->response
             ->withType($contentType)
             ->withHeader('Cache-Control', 'public, max-age=900')
             ->withStringBody($body);
+
+        return $this->stripBodyForHeadRequest($response);
     }
 
     public function video(string $fileId): Response
     {
-        $this->request->allowMethod(['get']);
+        $this->request->allowMethod(['get', 'head']);
 
         if (!preg_match('/^[a-zA-Z0-9_-]+$/', $fileId)) {
             throw new NotFoundException();
         }
 
-        $remoteUrl = sprintf('https://drive.google.com/uc?export=download&id=%s', $fileId);
-
-        $reqHeaders = "User-Agent: pixel-miniapps-papotv\r\n";
-        $rangeHeader = $this->request->getHeaderLine('Range');
-        if ($rangeHeader !== '') {
-            $reqHeaders .= "Range: {$rangeHeader}\r\n";
-        }
+        // Always download the full file — never forward Range to Google Drive because
+        // Google Drive does not support suffix ranges (bytes=-N), which browsers rely on
+        // to locate the moov atom in non-fast-start MP4s. Range slicing is handled below.
+        $remoteUrl = sprintf('https://drive.google.com/uc?export=download&id=%s&confirm=t', $fileId);
 
         $context = stream_context_create([
             'http' => [
                 'method' => 'GET',
-                'header' => $reqHeaders,
+                'header' => "User-Agent: pixel-miniapps-papotv\r\n",
                 'timeout' => 30,
                 'follow_location' => 1,
                 'max_redirects' => 10,
@@ -138,30 +137,121 @@ class PapoController extends AppController
             throw new NotFoundException();
         }
 
+        $normalizedContentType = strtolower(trim($contentType));
+        $isGenericBinary = in_array($normalizedContentType, [
+            'application/octet-stream',
+            'binary/octet-stream',
+            'application/binary',
+        ], true);
+
+        if ($isGenericBinary && $this->looksLikeMp4($body)) {
+            $contentType = 'video/mp4';
+            $normalizedContentType = 'video/mp4';
+        }
+
+        if (!str_starts_with($normalizedContentType, 'video/')) {
+            throw new NotFoundException();
+        }
+
+        $totalSize = strlen($body);
+        $rangeHeader = $this->request->getHeaderLine('Range');
+
+        if ($rangeHeader !== '') {
+            $range = $this->parseRangeHeader($rangeHeader, $totalSize);
+            if ($range === null) {
+                $response = $this->response
+                    ->withStatus(416)
+                    ->withType($contentType)
+                    ->withHeader('Cache-Control', 'public, max-age=1800')
+                    ->withHeader('Accept-Ranges', 'bytes')
+                    ->withHeader('Content-Range', "bytes */{$totalSize}")
+                    ->withHeader('Content-Length', '0')
+                    ->withStringBody('');
+
+                return $this->stripBodyForHeadRequest($response);
+            }
+
+            [$start, $end] = $range;
+            $partialLength = $end - $start + 1;
+
+            // Keep the full payload in the response body and let CakePHP's ResponseEmitter
+            // honor Content-Range when emitting bytes. If we pre-slice the string body here,
+            // non-zero ranges break because the emitter applies the offset again.
+            $response = $this->response
+                ->withStatus(206)
+                ->withType($contentType)
+                ->withHeader('Cache-Control', 'public, max-age=1800')
+                ->withHeader('Accept-Ranges', 'bytes')
+                ->withHeader('Content-Range', "bytes {$start}-{$end}/{$totalSize}")
+                ->withHeader('Content-Length', (string)$partialLength)
+                ->withStringBody($body);
+
+            return $this->stripBodyForHeadRequest($response);
+        }
+
         $response = $this->response
             ->withType($contentType)
             ->withHeader('Cache-Control', 'public, max-age=1800')
             ->withHeader('Accept-Ranges', 'bytes')
+            ->withHeader('Content-Length', (string)$totalSize)
             ->withStringBody($body);
 
-        // Forward Content-Length and Content-Range for range-request support
-        foreach ($responseHeaders as $header) {
-            if (!is_string($header)) {
-                continue;
-            }
+        return $this->stripBodyForHeadRequest($response);
+    }
 
-            if (stripos($header, 'Content-Length:') === 0) {
-                $parts = explode(':', $header, 2);
-                $response = $response->withHeader('Content-Length', trim($parts[1] ?? ''));
-            }
-
-            if (stripos($header, 'Content-Range:') === 0) {
-                $parts = explode(':', $header, 2);
-                $response = $response->withHeader('Content-Range', trim($parts[1] ?? ''))->withStatus(206);
-            }
+    /**
+     * Parse an HTTP Range header value and return [start, end] byte offsets,
+     * or null if the range is invalid / unsatisfiable.
+     * Handles all three forms: bytes=N-M, bytes=N-, bytes=-N (suffix).
+     *
+     * @return array{0: int, 1: int}|null
+     */
+    private function parseRangeHeader(string $rangeHeader, int $totalSize): ?array
+    {
+        if (!preg_match('/^bytes=(\d*)-(\d*)$/', $rangeHeader, $m)) {
+            return null;
         }
 
-        return $response;
+        $rawStart = $m[1];
+        $rawEnd = $m[2];
+
+        if ($rawStart === '' && $rawEnd === '') {
+            return null;
+        }
+
+        if ($rawStart === '') {
+            // Suffix range: bytes=-N  →  last N bytes
+            $suffixLength = (int)$rawEnd;
+            if ($suffixLength <= 0) {
+                return null;
+            }
+            $start = max(0, $totalSize - $suffixLength);
+            $end = $totalSize - 1;
+        } elseif ($rawEnd === '') {
+            // Open-ended range: bytes=N-
+            $start = (int)$rawStart;
+            $end = $totalSize - 1;
+        } else {
+            $start = (int)$rawStart;
+            $end = (int)$rawEnd;
+        }
+
+        if ($start >= $totalSize || $start > $end) {
+            return null;
+        }
+
+        $end = min($end, $totalSize - 1);
+
+        return [$start, $end];
+    }
+
+    private function stripBodyForHeadRequest(Response $response): Response
+    {
+        if (strtoupper($this->request->getMethod()) !== 'HEAD') {
+            return $response;
+        }
+
+        return $response->withStringBody('');
     }
 
     private function getCachedPapotVSlideShowItems(): array
@@ -345,6 +435,12 @@ class PapoController extends AppController
         }
 
         return null;
+    }
+
+    private function looksLikeMp4(string $body): bool
+    {
+        // ISO BMFF/MP4 files typically contain "ftyp" box near the start.
+        return str_contains(substr($body, 0, 64), 'ftyp');
     }
 
     private function isGoogleDriveUrl(string $url): bool
