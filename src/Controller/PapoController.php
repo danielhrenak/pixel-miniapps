@@ -91,7 +91,7 @@ class PapoController extends AppController
         $headers = $http_response_header ?? [];
         $contentType = $this->extractContentTypeFromHeaders($headers);
 
-        if ($body === false || $contentType === null || !str_starts_with(strtolower($contentType), 'image/')) {
+        if ($body === false || $contentType === null) {
             throw new NotFoundException();
         }
 
@@ -302,7 +302,7 @@ class PapoController extends AppController
 
         if ($detectedType === null) {
             $lowerUrl = strtolower($url);
-            $detectedType = (str_contains($lowerUrl, '.mp4') || str_contains($lowerUrl, '.webm') || str_contains($lowerUrl, '.mov') || str_contains($lowerUrl, '.ogg'))
+            $detectedType = (str_contains($lowerUrl, '.mp4') || str_contains($lowerUrl, '.webm') || str_contains($lowerUrl, '.mov') || str_contains($lowerUrl, '.ogg') || str_contains($lowerUrl, '.qt'))
                 ? 'video'
                 : 'image';
         }

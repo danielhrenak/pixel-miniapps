@@ -56,7 +56,7 @@
     const TOTAL_ITEMS = <?= (int)($totalItems ?? 0) ?>;
     const SLIDE_ENDPOINT = <?= json_encode($slideEndpoint ?? '', JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
     const PAGE_REFRESH_MS = 60 * 60 * 1000;
-    const ROTATION_TIME = 30000;
+    const ROTATION_TIME = 3000;
 
     let currentItem = normalizeSlideItem(INITIAL_ITEM);
     let currentIndex = INITIAL_INDEX;
@@ -120,7 +120,7 @@
             throw new Error(`Invalid slide payload for index ${index}`);
         }
 
-        totalItems = Number(payload.total || totalItems || 1);
+        totalItems = Math.max(Number(payload.total || totalItems || 1), 1);
 
         return {
             index: Number(payload.index ?? index),
@@ -149,13 +149,13 @@
     }
 
     async function queueNextSlide() {
-        if (!currentItem || totalItems <= 1) {
+        if (!currentItem) {
             bufferedSlide = null;
             bufferedIndex = null;
             return;
         }
 
-        const nextIndex = (currentIndex + 1) % totalItems;
+        const nextIndex = (currentIndex + 1) % Math.max(totalItems, 1);
         if (bufferedSlide && bufferedIndex === nextIndex) {
             return;
         }
@@ -282,11 +282,6 @@
             return;
         }
 
-        if (totalItems === 1) {
-            renderCurrentItem();
-            return;
-        }
-
         isAdvancing = true;
 
         try {
@@ -322,11 +317,9 @@
 
         renderCurrentItem();
 
-        if (totalItems > 1) {
-            rotationInterval = setInterval(() => {
-                void nextImage();
-            }, ROTATION_TIME);
-        }
+        rotationInterval = setInterval(() => {
+            void nextImage();
+        }, ROTATION_TIME);
     }
 
     async function unlockMediaPlayback() {
