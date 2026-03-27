@@ -41,7 +41,7 @@
             <div class="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
         </div>
         <img id="main-image" src="" alt="" referrerPolicy="no-referrer" class="max-w-full max-h-full object-contain shadow-2xl z-10 transition-opacity opacity-0" />
-        <video id="main-video" class="max-w-full max-h-full object-contain shadow-2xl z-10 transition-opacity opacity-0 hidden" autoplay muted playsinline></video>
+        <video id="main-video" class="max-w-full max-h-full object-contain shadow-2xl z-10 transition-opacity opacity-0 hidden" autoplay muted playsinline loop></video>
     </div>
 
     <!-- Progress Bar -->
@@ -148,6 +148,22 @@
         preloadedElements.set(url, img);
     }
 
+    function getRandomIndex(excludedIndex = null) {
+        const total = Math.max(totalItems, 1);
+        if (total === 1) {
+            return 0;
+        }
+
+        let index = Math.floor(Math.random() * total);
+        if (excludedIndex !== null) {
+            while (index === excludedIndex) {
+                index = Math.floor(Math.random() * total);
+            }
+        }
+
+        return index;
+    }
+
     async function queueNextSlide() {
         if (!currentItem) {
             bufferedSlide = null;
@@ -155,7 +171,7 @@
             return;
         }
 
-        const nextIndex = (currentIndex + 1) % Math.max(totalItems, 1);
+        const nextIndex = getRandomIndex(currentIndex);
         if (bufferedSlide && bufferedIndex === nextIndex) {
             return;
         }
@@ -225,6 +241,8 @@
                 bgVideo.pause();
                 mainVideo.muted = true;
                 bgVideo.muted = true;
+                mainVideo.loop = true;
+                bgVideo.loop = true;
                 mainVideo.src = url;
                 bgVideo.src = url;
                 mainVideo.load();
@@ -285,16 +303,15 @@
         isAdvancing = true;
 
         try {
-            const expectedNextIndex = (currentIndex + 1) % totalItems;
             let nextSlide;
 
-            if (bufferedSlide && bufferedIndex === expectedNextIndex) {
+            if (bufferedSlide) {
                 nextSlide = {
                     index: bufferedIndex,
                     item: bufferedSlide,
                 };
             } else {
-                nextSlide = await fetchSlide(expectedNextIndex);
+                nextSlide = await fetchSlide(getRandomIndex(currentIndex));
             }
 
             bufferedSlide = null;
