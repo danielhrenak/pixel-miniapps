@@ -31,6 +31,7 @@ use Cake\Routing\Router;
 class PapoController extends AppController
 {
     private const SLIDES_CACHE_KEY = 'papotv_slides_v4';
+    private const SLIDES_CACHE_CONFIG = 'papotv_slides';
 
     public function papotv(): void
     {
@@ -165,13 +166,13 @@ class PapoController extends AppController
 
     private function getCachedPapotVSlideShowItems(): array
     {
-        $cachedItems = Cache::read(self::SLIDES_CACHE_KEY, 'default');
+        $cachedItems = Cache::read(self::SLIDES_CACHE_KEY, self::SLIDES_CACHE_CONFIG);
         if (is_array($cachedItems) && $cachedItems !== []) {
             return $cachedItems;
         }
 
         $items = $this->getPapotVSlideShowItems();
-        Cache::write(self::SLIDES_CACHE_KEY, $items, 'default');
+        Cache::write(self::SLIDES_CACHE_KEY, $items, self::SLIDES_CACHE_CONFIG);
 
         return $items;
     }

@@ -102,6 +102,15 @@ return [
             'url' => env('CACHE_DEFAULT_URL', null),
         ],
 
+        'papotv_slides' => [
+            'className' => FileEngine::class,
+            'path' => CACHE . 'persistent' . DS,
+            'prefix' => 'papotv_slides_',
+            'serialize' => true,
+            'duration' => '+1 hour',
+            'url' => env('CACHE_PAPOTV_SLIDES_URL', null),
+        ],
+
         /*
          * Configure the cache used for general framework caching.
          * Translation cache files are stored with this configuration.
