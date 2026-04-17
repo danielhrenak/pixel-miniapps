@@ -19,5 +19,10 @@ class ScavengerController extends AppController
     {
         $this->viewBuilder()->setLayout('tailwin');
     }
+
+    public function stagePocitanie(): void
+    {
+        $this->viewBuilder()->setLayout('tailwin');
+    }
 }
 

@@ -65,6 +65,7 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/scavenge/stage9', ['controller' => 'Scavenger', 'action' => 'stage9'], ['_name' => 'scavenger_stage9']);
         $builder->connect('/scavenge/stage_sudoku', ['controller' => 'Scavenger', 'action' => 'stageSudoku'], ['_name' => 'scavenger_stage_sudoku']);
         $builder->connect('/scavenge/stage_einstein', ['controller' => 'Scavenger', 'action' => 'stageEinstein'], ['_name' => 'scavenger_stage_einstein']);
+        $builder->connect('/scavenge/stage_pocitanie', ['controller' => 'Scavenger', 'action' => 'stagePocitanie'], ['_name' => 'scavenger_stage_pocitanie']);
 
         /*
          * ...and connect the rest of 'Pages' controller's URLs.
