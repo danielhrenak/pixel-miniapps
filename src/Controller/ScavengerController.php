@@ -10,7 +10,20 @@ class ScavengerController extends AppController
     public function index(): void
     {
         $this->viewBuilder()->setLayout('tailwin');
+        $this->set('items', $this->buildStageItems());
+    }
 
+    public function qrIndex(): void
+    {
+        $this->viewBuilder()->setLayout('tailwin');
+        $this->set('items', $this->buildStageItems());
+    }
+
+    /**
+     * @return array<int, array{title:string,description:string,url:string,qrUrl:string}>
+     */
+    private function buildStageItems(): array
+    {
         $stages = [
             ['title' => 'Stage 9', 'route' => 'scavenger_stage9', 'description' => 'Rozlusti emoji sifru a zadaj spravne heslo.'],
             ['title' => 'Stage Sudoku', 'route' => 'scavenger_stage_sudoku', 'description' => 'Vyries sudoku a opis spodny riadok bez medzier.'],
@@ -34,7 +47,7 @@ class ScavengerController extends AppController
             ];
         }, $stages);
 
-        $this->set('items', $items);
+        return $items;
     }
 
     public function stage9(): void
