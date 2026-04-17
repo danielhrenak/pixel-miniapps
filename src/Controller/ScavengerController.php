@@ -9,5 +9,10 @@ class ScavengerController extends AppController
     {
         $this->viewBuilder()->setLayout('tailwin');
     }
+
+    public function stageSudoku(): void
+    {
+        $this->viewBuilder()->setLayout('tailwin');
+    }
 }
 

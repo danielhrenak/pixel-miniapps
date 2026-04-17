@@ -63,6 +63,7 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/papotv/image/{fileId}', ['controller' => 'Papo', 'action' => 'image'], ['_name' => 'papotv_image'])->setPass(['fileId']);
         $builder->connect('/papotv/video/{fileId}', ['controller' => 'Papo', 'action' => 'video'], ['_name' => 'papotv_video'])->setPass(['fileId']);
         $builder->connect('/scavenge/stage9', ['controller' => 'Scavenger', 'action' => 'stage9'], ['_name' => 'scavenger_stage9']);
+        $builder->connect('/scavenge/stage_sudoku', ['controller' => 'Scavenger', 'action' => 'stageSudoku'], ['_name' => 'scavenger_stage_sudoku']);
 
         /*
          * ...and connect the rest of 'Pages' controller's URLs.
