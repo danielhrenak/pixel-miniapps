@@ -12,9 +12,7 @@
                 <div id="attempt-indicator" class="attempt-indicator">Pokus 1/8</div>
             </div>
 
-            <div id="solve-panel" class="solve-panel hidden">
-                <strong>?vyries=1:</strong>
-                <span>Správne riešenie</span>
+            <div id="solve-panel" class="hidden">
                 <div id="solve-code" class="code-display"></div>
             </div>
 
