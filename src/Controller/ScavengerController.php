@@ -19,6 +19,7 @@ class ScavengerController extends AppController
             ['title' => 'Stage Floppy', 'route' => 'scavenger_stage_floppy', 'description' => 'Prelet cez prekazky vo Floppy Bird hre aj na mobile.'],
             ['title' => 'Stage Timebomb', 'route' => 'scavenger_stage_timebomb', 'description' => 'Co najpresnejsie odhadni 10 sekund bez hodin.'],
             ['title' => 'Stage Memory', 'route' => 'scavenger_stage_memory', 'description' => 'Zapamataj si chaoticku scenu a odpovedz na pamatove otazky.'],
+            ['title' => 'Stage Mastermind', 'route' => 'scavenger_stage_mastermind', 'description' => 'Uhádni tajný 4-farebný kód do 8 pokusov a odomkni postupnú odmenu.'],
         ];
 
         $items = array_map(function (array $stage): array {
@@ -66,6 +67,11 @@ class ScavengerController extends AppController
     }
 
     public function stageMemory(): void
+    {
+        $this->viewBuilder()->setLayout('tailwin');
+    }
+
+    public function stageMastermind(): void
     {
         $this->viewBuilder()->setLayout('tailwin');
     }

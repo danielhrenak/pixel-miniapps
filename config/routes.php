@@ -70,6 +70,7 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/scavenge/stage_floppy', ['controller' => 'Scavenger', 'action' => 'stageFloppy'], ['_name' => 'scavenger_stage_floppy']);
         $builder->connect('/scavenge/stage_timebomb', ['controller' => 'Scavenger', 'action' => 'stageTimebomb'], ['_name' => 'scavenger_stage_timebomb']);
         $builder->connect('/scavenge/stage_memory', ['controller' => 'Scavenger', 'action' => 'stageMemory'], ['_name' => 'scavenger_stage_memory']);
+        $builder->connect('/scavenge/stage_mastermind', ['controller' => 'Scavenger', 'action' => 'stageMastermind'], ['_name' => 'scavenger_stage_mastermind']);
 
         /*
          * ...and connect the rest of 'Pages' controller's URLs.
