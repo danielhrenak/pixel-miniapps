@@ -12,11 +12,12 @@ class ScavengerController extends AppController
         $this->viewBuilder()->setLayout('tailwin');
 
         $stages = [
-            ['title' => 'Stage 9', 'route' => 'scavenger_stage9'],
-            ['title' => 'Stage Sudoku', 'route' => 'scavenger_stage_sudoku'],
-            ['title' => 'Stage Einstein', 'route' => 'scavenger_stage_einstein'],
-            ['title' => 'Stage Pocitanie', 'route' => 'scavenger_stage_pocitanie'],
-            ['title' => 'Stage Floppy', 'route' => 'scavenger_stage_floppy'],
+            ['title' => 'Stage 9', 'route' => 'scavenger_stage9', 'description' => 'Rozlusti emoji sifru a zadaj spravne heslo.'],
+            ['title' => 'Stage Sudoku', 'route' => 'scavenger_stage_sudoku', 'description' => 'Vyries sudoku a opis spodny riadok bez medzier.'],
+            ['title' => 'Stage Einstein', 'route' => 'scavenger_stage_einstein', 'description' => 'Poskladaj Einsteinovu hadanku presne podla indicií.'],
+            ['title' => 'Stage Pocitanie', 'route' => 'scavenger_stage_pocitanie', 'description' => 'Postupne odpovedz na seriu otazok a odomkni odmenu.'],
+            ['title' => 'Stage Floppy', 'route' => 'scavenger_stage_floppy', 'description' => 'Prelet cez prekazky vo Floppy Bird hre aj na mobile.'],
+            ['title' => 'Stage Timebomb', 'route' => 'scavenger_stage_timebomb', 'description' => 'Co najpresnejsie odhadni 10 sekund bez hodin.'],
         ];
 
         $items = array_map(function (array $stage): array {
@@ -24,6 +25,7 @@ class ScavengerController extends AppController
 
             return [
                 'title' => $stage['title'],
+                'description' => $stage['description'],
                 'url' => $url,
                 'qrUrl' => 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=' . rawurlencode($url),
             ];
@@ -53,6 +55,11 @@ class ScavengerController extends AppController
     }
 
     public function stageFloppy(): void
+    {
+        $this->viewBuilder()->setLayout('tailwin');
+    }
+
+    public function stageTimebomb(): void
     {
         $this->viewBuilder()->setLayout('tailwin');
     }
