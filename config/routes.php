@@ -62,6 +62,7 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/papotv/item', ['controller' => 'Papo', 'action' => 'item'], ['_name' => 'papotv_item']);
         $builder->connect('/papotv/image/{fileId}', ['controller' => 'Papo', 'action' => 'image'], ['_name' => 'papotv_image'])->setPass(['fileId']);
         $builder->connect('/papotv/video/{fileId}', ['controller' => 'Papo', 'action' => 'video'], ['_name' => 'papotv_video'])->setPass(['fileId']);
+        $builder->connect('/scavenge', ['controller' => 'Scavenger', 'action' => 'index'], ['_name' => 'scavenger_index']);
         $builder->connect('/scavenge/stage9', ['controller' => 'Scavenger', 'action' => 'stage9'], ['_name' => 'scavenger_stage9']);
         $builder->connect('/scavenge/stage_sudoku', ['controller' => 'Scavenger', 'action' => 'stageSudoku'], ['_name' => 'scavenger_stage_sudoku']);
         $builder->connect('/scavenge/stage_einstein', ['controller' => 'Scavenger', 'action' => 'stageEinstein'], ['_name' => 'scavenger_stage_einstein']);

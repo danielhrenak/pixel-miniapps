@@ -2,14 +2,14 @@
     <div class="w-full max-w-6xl rounded-3xl border border-slate-700 bg-slate-900/70 p-5 shadow-2xl backdrop-blur md:p-8">
         <div id="game-screen" class="space-y-5">
             <h1 class="text-center text-3xl font-bold tracking-tight md:text-4xl">Scavenger - Stage Floppy</h1>
-            <p class="text-center text-slate-300">Tapni / klikni / stlac medzernik pre skok. Ciel: prejdi 10 prekazok.</p>
+            <p id="goal-text" class="text-center text-slate-300">Tapni / klikni / stlac medzernik pre skok.</p>
 
             <div class="mx-auto w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-700 bg-slate-950/80 p-2">
                 <canvas id="floppy-canvas" class="mx-auto block w-full touch-none" width="720" height="420" aria-label="Floppy Bird hra"></canvas>
             </div>
 
             <div class="flex items-center justify-center gap-4 text-sm md:text-base">
-                <span class="rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-1 text-slate-200">Skore: <strong id="score">0</strong> / 10</span>
+                <span class="rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-1 text-slate-200">Skore: <strong id="score">0</strong> / <span id="goal-value">10</span></span>
                 <span id="status" class="text-slate-300">Klikni alebo tapni pre start</span>
             </div>
 
@@ -58,7 +58,9 @@
 
 <script>
     (function () {
-        const GOAL = 10;
+        const searchParams = new URLSearchParams(window.location.search);
+        const isSolveMode = searchParams.get('vyries') === '1';
+        const GOAL = isSolveMode ? 1 : 10;
         const GRAVITY = 0.35;
         const JUMP = -6.4;
         const PIPE_SPEED = 2.4;
@@ -70,12 +72,17 @@
         const resultScreen = document.getElementById('result-screen');
         const canvas = document.getElementById('floppy-canvas');
         const scoreEl = document.getElementById('score');
+        const goalValueEl = document.getElementById('goal-value');
+        const goalTextEl = document.getElementById('goal-text');
         const statusEl = document.getElementById('status');
         const restartBtn = document.getElementById('restart-btn');
 
-        if (!gameScreen || !resultScreen || !canvas || !scoreEl || !statusEl || !restartBtn) {
+        if (!gameScreen || !resultScreen || !canvas || !scoreEl || !goalValueEl || !goalTextEl || !statusEl || !restartBtn) {
             return;
         }
+
+        goalValueEl.textContent = String(GOAL);
+        goalTextEl.textContent = 'Tapni / klikni / stlac medzernik pre skok. Ciel: prejdi ' + GOAL + ' prekazok.';
 
         const ctx = canvas.getContext('2d');
         if (!ctx) {
