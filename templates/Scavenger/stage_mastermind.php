@@ -34,10 +34,6 @@
 
                 <div id="palette" class="palette"></div>
 
-                <div class="active-row-panel">
-                    <div class="active-row-label">Aktívny pokus</div>
-                    <div id="active-preview" class="active-preview"></div>
-                </div>
 
                 <div id="game-message" class="game-message hidden"></div>
 
@@ -109,7 +105,7 @@
 <style>
     .mastermind-page {
         min-height: 100vh;
-        padding: 2rem 1rem;
+        padding: 0.75rem 0.5rem;
         background:
             radial-gradient(circle at top, rgba(255, 215, 0, 0.15), transparent 35%),
             linear-gradient(180deg, #1a1a1a 0%, #232323 50%, #2d2d2d 100%);
@@ -120,39 +116,40 @@
     .mastermind-shell {
         width: min(1120px, 100%);
         margin: 0 auto;
-        border-radius: 28px;
+        border-radius: 20px;
         border: 1px solid rgba(255, 215, 0, 0.16);
         background: rgba(8, 8, 8, 0.82);
-        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(18px);
-        padding: 1.5rem;
+        padding: 0.85rem;
     }
 
     .mastermind-header {
         text-align: center;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.75rem;
     }
 
     .mastermind-kicker {
-        margin: 0 0 0.5rem;
+        margin: 0 0 0.25rem;
         color: #ffd700;
         letter-spacing: 0.34em;
         text-transform: uppercase;
-        font-size: 0.82rem;
+        font-size: 0.75rem;
     }
 
     .mastermind-header h1 {
         margin: 0;
-        font-size: clamp(2.1rem, 5vw, 3.7rem);
+        font-size: clamp(1.6rem, 5vw, 3rem);
         color: #ffd700;
         text-shadow: 0 0 18px rgba(255, 215, 0, 0.18);
     }
 
     .mastermind-subtitle {
-        margin: 0.85rem auto 0;
+        margin: 0.4rem auto 0;
         max-width: 760px;
-        line-height: 1.7;
+        line-height: 1.5;
         color: #d1d5db;
+        font-size: 0.88rem;
     }
 
     .mastermind-screen.hidden {
@@ -178,17 +175,18 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 1rem;
+        gap: 0.5rem;
         flex-wrap: wrap;
-        padding: 1rem 1.1rem;
-        margin-bottom: 1rem;
+        padding: 0.6rem 0.85rem;
+        margin-bottom: 0.6rem;
     }
 
     .game-badge,
     .attempt-indicator {
         border-radius: 999px;
-        padding: 0.7rem 1rem;
+        padding: 0.45rem 0.85rem;
         font-weight: 700;
+        font-size: 0.85rem;
     }
 
     .game-badge {
@@ -205,12 +203,13 @@
 
     .legend-card {
         display: flex;
-        gap: 1rem;
+        gap: 0.6rem;
         flex-wrap: wrap;
         justify-content: center;
-        padding: 0.95rem 1rem;
-        margin-bottom: 1rem;
+        padding: 0.6rem 0.85rem;
+        margin-bottom: 0.6rem;
         color: #d1d5db;
+        font-size: 0.82rem;
     }
 
     .legend-card span {
@@ -236,14 +235,14 @@
     }
 
     .board-card {
-        padding: 1rem;
-        margin-bottom: 1rem;
+        padding: 0.65rem;
+        margin-bottom: 0.65rem;
     }
 
     .board {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 0.45rem;
     }
 
     .board.board-shake {
@@ -252,11 +251,11 @@
 
     .guess-row {
         display: grid;
-        grid-template-columns: minmax(88px, 110px) 1fr minmax(88px, 110px);
+        grid-template-columns: minmax(60px, 80px) 1fr minmax(60px, 80px);
         align-items: center;
-        gap: 0.75rem;
-        padding: 0.85rem;
-        border-radius: 20px;
+        gap: 0.5rem;
+        padding: 0.5rem 0.65rem;
+        border-radius: 14px;
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.06);
         transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
@@ -265,7 +264,7 @@
     .guess-row.active {
         border-color: rgba(255, 215, 0, 0.55);
         box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.08);
-        animation: rowPulse 1.4s ease-in-out infinite;
+        grid-template-columns: minmax(60px, 80px) 1fr;
     }
 
     .guess-row.locked {
@@ -289,7 +288,7 @@
     .guess-cells {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.75rem;
+        gap: 0.45rem;
     }
 
     .guess-slot,
@@ -298,7 +297,7 @@
     .palette-button {
         border-radius: 999px;
         aspect-ratio: 1 / 1;
-        min-height: 52px;
+        min-height: 40px;
     }
 
     .guess-slot,
@@ -320,8 +319,16 @@
 
     .guess-slot.selected {
         border-color: #ffd700;
-        box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.12);
-        transform: translateY(-1px);
+        animation: slotPulse 0.85s ease-in-out infinite;
+    }
+
+    .board-palette {
+        padding: 0.5rem 0.65rem 0.65rem;
+        border-radius: 0 0 14px 14px;
+        background: rgba(255, 215, 0, 0.04);
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        border-top: none;
+        margin-top: -0.45rem;
     }
 
     .feedback-grid {
@@ -357,26 +364,32 @@
 
     .controls-card,
     .result-card {
-        padding: 1.25rem;
+        padding: 0.85rem;
     }
 
     .controls-head h2 {
-        margin: 0 0 0.35rem;
+        margin: 0 0 0.2rem;
         color: #ffd700;
+        font-size: 1rem;
     }
 
     .controls-head p,
     .result-copy {
         margin: 0;
         color: #d1d5db;
-        line-height: 1.65;
+        line-height: 1.5;
+        font-size: 0.85rem;
     }
 
     .palette {
-        margin-top: 1rem;
+        margin-top: 0.65rem;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
-        gap: 0.8rem;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .controls-card > .palette {
+        display: none;
     }
 
     .palette-button {
@@ -405,34 +418,36 @@
     }
 
     .active-row-panel {
-        margin-top: 1.2rem;
-        border-radius: 18px;
+        margin-top: 0.65rem;
+        border-radius: 14px;
         border: 1px solid rgba(255, 215, 0, 0.16);
         background: rgba(255, 215, 0, 0.04);
-        padding: 1rem;
+        padding: 0.65rem;
     }
 
     .active-row-label {
         font-weight: 700;
-        margin-bottom: 0.65rem;
+        margin-bottom: 0.45rem;
         color: #f8fafc;
+        font-size: 0.85rem;
     }
 
     .active-preview,
     .code-display {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 64px));
-        gap: 0.75rem;
+        grid-template-columns: repeat(4, minmax(0, 52px));
+        gap: 0.55rem;
         justify-content: center;
     }
 
     .game-message {
-        margin-top: 1rem;
-        border-radius: 16px;
-        padding: 0.95rem 1rem;
+        margin-top: 0.65rem;
+        border-radius: 12px;
+        padding: 0.65rem 0.85rem;
         border: 1px solid rgba(255, 255, 255, 0.12);
         text-align: center;
         font-weight: 700;
+        font-size: 0.88rem;
     }
 
     .game-message.error {
@@ -445,19 +460,20 @@
     .reward-actions,
     .result-actions {
         display: flex;
-        gap: 0.85rem;
+        gap: 0.65rem;
         justify-content: center;
         flex-wrap: wrap;
-        margin-top: 1.2rem;
+        margin-top: 0.85rem;
     }
 
     .mastermind-button,
     .reward-link {
         appearance: none;
         border: none;
-        border-radius: 16px;
-        padding: 1rem 1.35rem;
+        border-radius: 12px;
+        padding: 0.75rem 1.1rem;
         font-weight: 900;
+        font-size: 0.9rem;
         letter-spacing: 0.04em;
         cursor: pointer;
         text-decoration: none;
@@ -525,6 +541,11 @@
         font-weight: 700;
     }
 
+    @keyframes slotPulse {
+        0%, 100% { box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2); border-color: #ffd700; }
+        50% { box-shadow: 0 0 0 7px rgba(255, 215, 0, 0.35), 0 0 18px rgba(255, 215, 0, 0.45); border-color: #fff; }
+    }
+
     @keyframes rowPulse {
         0%, 100% { box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.08); }
         50% { box-shadow: 0 0 0 6px rgba(255, 215, 0, 0.14); }
@@ -550,22 +571,22 @@
         }
 
         .guess-row {
-            grid-template-columns: 1fr;
-            justify-items: center;
-            text-align: center;
-            gap: 0.6rem;
-            padding: 0.75rem;
+            grid-template-columns: minmax(44px, 56px) 1fr minmax(44px, 56px);
+            gap: 0.35rem;
+            padding: 0.45rem 0.5rem;
+        }
+
+        .row-label {
+            font-size: 0.75rem;
         }
 
         .feedback-grid {
-            justify-content: center;
-            grid-template-columns: repeat(4, 16px);
-            grid-auto-rows: 16px;
+            gap: 0.25rem;
         }
 
         .board-card,
         .controls-card {
-            padding: 0.95rem;
+            padding: 0.65rem;
         }
 
         .controls-actions,
@@ -583,53 +604,45 @@
 
     @media (max-width: 640px) {
         .mastermind-page {
-            padding: 1rem 0.75rem;
+            padding: 0.5rem 0.35rem;
         }
 
         .mastermind-shell {
-            padding: 1rem;
+            padding: 0.65rem;
+            border-radius: 16px;
         }
 
         .mastermind-subtitle {
-            font-size: 0.96rem;
-            line-height: 1.55;
+            font-size: 0.82rem;
+            line-height: 1.45;
         }
 
         .legend-card {
             justify-content: flex-start;
-            gap: 0.75rem;
-            padding: 0.9rem;
-            font-size: 0.92rem;
-        }
-
-        .guess-cells,
-        .active-preview,
-        .code-display {
-            gap: 0.55rem;
-        }
-
-        .guess-row {
-            width: 100%;
-        }
-
-        .guess-cells {
-            width: 100%;
+            gap: 0.5rem;
+            padding: 0.6rem;
+            font-size: 0.78rem;
         }
 
         .guess-slot,
         .preview-slot,
         .code-peg,
         .palette-button {
-            min-height: 56px;
+            min-height: 36px;
+        }
+
+        .guess-cells,
+        .active-preview,
+        .code-display {
+            gap: 0.35rem;
         }
 
         .palette {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 0.65rem;
+            gap: 0.4rem;
         }
 
         .palette-button::after {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
         }
 
         .active-row-label,
@@ -640,7 +653,18 @@
         }
 
         .result-card {
-            padding: 1rem;
+            padding: 0.85rem;
+        }
+
+        .peg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .feedback-grid {
+            grid-template-columns: repeat(2, 12px);
+            grid-auto-rows: 12px;
+            gap: 0.2rem;
         }
     }
 </style>
@@ -675,7 +699,6 @@
             solvePanel: document.getElementById('solve-panel'),
             solveCode: document.getElementById('solve-code'),
             palette: document.getElementById('palette'),
-            activePreview: document.getElementById('active-preview'),
             gameMessage: document.getElementById('game-message'),
             submitGuess: document.getElementById('submit-guess'),
             newGame: document.getElementById('new-game'),
@@ -763,10 +786,7 @@
         }
 
         function renderPreview() {
-            elements.activePreview.innerHTML = '';
-            state.currentGuess.forEach((colorKey) => {
-                elements.activePreview.appendChild(createPeg(colorKey, 'preview-slot'));
-            });
+            // preview panel removed; no-op kept for call-site compatibility
         }
 
         function renderFeedback(feedback) {
@@ -835,12 +855,20 @@
 
                 const feedbackHolder = isPast && rowState
                     ? renderFeedback(rowState.feedback)
-                    : renderFeedback({ black: 0, white: 0 });
+                    : null;
 
                 row.appendChild(label);
                 row.appendChild(cells);
-                row.appendChild(feedbackHolder);
+                if (feedbackHolder) row.appendChild(feedbackHolder);
                 elements.board.appendChild(row);
+
+                // Insert palette directly below the active row
+                if (isActive) {
+                    const paletteWrapper = document.createElement('div');
+                    paletteWrapper.className = 'board-palette';
+                    paletteWrapper.appendChild(elements.palette);
+                    elements.board.appendChild(paletteWrapper);
+                }
             }
         }
 
