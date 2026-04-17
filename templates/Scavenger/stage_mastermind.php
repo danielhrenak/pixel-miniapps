@@ -27,11 +27,6 @@
             </div>
 
             <div id="controls-card" class="controls-card">
-                <div class="controls-head">
-                    <h2>Paleta farieb</h2>
-                    <p>Klikni na pozíciu v aktívnom riadku a vyber farbu.</p>
-                </div>
-
                 <div id="palette" class="palette"></div>
 
 
@@ -272,12 +267,7 @@
     }
 
     .guess-row.future {
-        opacity: 0.18;
-        max-height: 10px;
-        padding: 0;
-        pointer-events: none;
-        overflow: hidden;
-        border-radius: 8px;
+        display: none;
     }
 
     .row-label {
