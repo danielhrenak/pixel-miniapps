@@ -242,7 +242,7 @@
 
     .board {
         display: flex;
-        flex-direction: column-reverse;
+        flex-direction: column;
         gap: 0.75rem;
     }
 
@@ -273,7 +273,12 @@
     }
 
     .guess-row.future {
-        opacity: 0.35;
+        opacity: 0.18;
+        max-height: 10px;
+        padding: 0;
+        pointer-events: none;
+        overflow: hidden;
+        border-radius: 8px;
     }
 
     .row-label {
