@@ -168,6 +168,10 @@
         let touchOffsetX = 0;
         let touchOffsetY = 0;
         let touchLastTarget = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchDragStarted = false;
+        const TOUCH_DRAG_THRESHOLD = 8; // px before drag is committed
 
         if (!puzzleScreen || !resultScreen || !tbody || !checkButton || !errorMessage) {
             return;
@@ -248,43 +252,61 @@
                 if (event.touches.length !== 1) {
                     return;
                 }
-                event.preventDefault(); // prevents scroll while dragging a card
-
+                // Do NOT preventDefault here — let scroll happen until threshold is met
                 const touch = event.touches[0];
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+                touchDragCard = card;
+                touchDragStarted = false;
+
                 const rect = card.getBoundingClientRect();
                 touchOffsetX = touch.clientX - rect.left;
                 touchOffsetY = touch.clientY - rect.top;
-                touchDragCard = card;
-
-                // Create a floating visual clone
-                touchClone = card.cloneNode(true);
-                touchClone.style.cssText = [
-                    'position:fixed',
-                    'pointer-events:none',
-                    'z-index:9999',
-                    'width:' + rect.width + 'px',
-                    'opacity:0.85',
-                    'left:' + (touch.clientX - touchOffsetX) + 'px',
-                    'top:' + (touch.clientY - touchOffsetY) + 'px',
-                    'box-shadow:0 8px 24px rgba(0,0,0,0.45)',
-                    'transform:scale(1.08)',
-                    'transition:none',
-                ].join(';');
-                document.body.appendChild(touchClone);
-                card.style.opacity = '0.3';
-            }, { passive: false });
+            }, { passive: true });
 
             card.addEventListener('touchmove', function (event) {
-                if (!touchClone || !touchDragCard) {
+                if (!touchDragCard) {
                     return;
                 }
-                event.preventDefault();
 
                 const touch = event.touches[0];
+                const dx = touch.clientX - touchStartX;
+                const dy = touch.clientY - touchStartY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (!touchDragStarted) {
+                    if (distance < TOUCH_DRAG_THRESHOLD) {
+                        // Still below threshold — allow scroll, do nothing yet
+                        return;
+                    }
+                    // Threshold crossed — commit to drag mode
+                    touchDragStarted = true;
+
+                    const rect = card.getBoundingClientRect();
+                    touchClone = card.cloneNode(true);
+                    touchClone.style.cssText = [
+                        'position:fixed',
+                        'pointer-events:none',
+                        'z-index:9999',
+                        'width:' + rect.width + 'px',
+                        'opacity:0.88',
+                        'left:' + (touch.clientX - touchOffsetX) + 'px',
+                        'top:' + (touch.clientY - touchOffsetY) + 'px',
+                        'box-shadow:0 8px 24px rgba(0,0,0,0.45)',
+                        'transform:scale(1.1)',
+                        'transition:none',
+                    ].join(';');
+                    document.body.appendChild(touchClone);
+                    card.style.opacity = '0.3';
+                }
+
+                // Only call preventDefault once we're in drag mode (prevents scroll lock during table pan)
+                event.preventDefault();
+
                 touchClone.style.left = (touch.clientX - touchOffsetX) + 'px';
                 touchClone.style.top = (touch.clientY - touchOffsetY) + 'px';
 
-                // Highlight the cell under the finger
+                // Highlight cell under finger
                 touchClone.style.display = 'none';
                 const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
                 touchClone.style.display = '';
@@ -301,39 +323,49 @@
             }, { passive: false });
 
             card.addEventListener('touchend', function (event) {
-                if (!touchClone || !touchDragCard) {
+                if (!touchDragCard) {
                     return;
                 }
-                event.preventDefault();
-
-                // Clean up clone and highlight
-                touchClone.remove();
-                touchClone = null;
-                touchDragCard.style.opacity = '';
 
                 if (touchLastTarget) {
                     touchLastTarget.classList.remove('ring-2', 'ring-sky-400');
                 }
 
-                const touch = event.changedTouches[0];
-                const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-                const targetCell = elementUnder ? elementUnder.closest('td[data-category]') : null;
+                if (touchDragStarted && touchClone) {
+                    // Drag was committed — perform the move
+                    event.preventDefault();
+                    touchClone.remove();
+                    touchClone = null;
+                    touchDragCard.style.opacity = '';
 
-                if (
-                    targetCell &&
-                    targetCell.dataset.category === touchDragCard.dataset.category &&
-                    targetCell !== touchDragCard.parentElement
-                ) {
-                    const sourceCell = touchDragCard.parentElement;
-                    const existingCard = targetCell.querySelector('[draggable="true"]');
-                    if (existingCard) {
-                        sourceCell.appendChild(existingCard);
+                    const touch = event.changedTouches[0];
+                    const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const targetCell = elementUnder ? elementUnder.closest('td[data-category]') : null;
+
+                    if (
+                        targetCell &&
+                        targetCell.dataset.category === touchDragCard.dataset.category &&
+                        targetCell !== touchDragCard.parentElement
+                    ) {
+                        const sourceCell = touchDragCard.parentElement;
+                        const existingCard = targetCell.querySelector('[draggable="true"]');
+                        if (existingCard) {
+                            sourceCell.appendChild(existingCard);
+                        }
+                        targetCell.appendChild(touchDragCard);
                     }
-                    targetCell.appendChild(touchDragCard);
+                } else {
+                    // Below threshold — treat as tap (click event will handle selection)
+                    touchDragCard.style.opacity = '';
+                    if (touchClone) {
+                        touchClone.remove();
+                        touchClone = null;
+                    }
                 }
 
                 touchDragCard = null;
                 touchLastTarget = null;
+                touchDragStarted = false;
             }, { passive: false });
 
             return card;
@@ -417,12 +449,12 @@
 
                 for (let i = 0; i < 5; i++) {
                     const cell = document.createElement('td');
-                    cell.className = 'border border-slate-700 px-1 py-1 align-top min-w-[90px] ' + category.rowClass;
+                    cell.className = 'border border-slate-700 px-2 py-2 align-top min-w-[100px] ' + category.rowClass;
                     cell.dataset.category = category.key;
                     cell.dataset.house = String(i);
                     makeDropCell(cell);
                     const card = createCard(category.key, values[i], category.cardClass);
-                    card.className = 'cursor-pointer select-none rounded-lg border px-2 py-3 text-slate-100 shadow transition-transform text-xs leading-tight w-full text-center min-h-[44px] flex items-center justify-center ' + category.cardClass;
+                    card.className = 'cursor-pointer select-none rounded-lg border px-3 py-3 text-slate-100 shadow transition-transform text-xs leading-tight w-full text-center min-h-[52px] flex items-center justify-center ' + category.cardClass;
                     cell.appendChild(card);
                     row.appendChild(cell);
                 }
