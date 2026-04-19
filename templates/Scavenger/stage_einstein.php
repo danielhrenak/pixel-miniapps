@@ -162,6 +162,13 @@
         let selectedCard = null;
         let hideErrorTimeout = null;
 
+        // Touch drag state
+        let touchDragCard = null;
+        let touchClone = null;
+        let touchOffsetX = 0;
+        let touchOffsetY = 0;
+        let touchLastTarget = null;
+
         if (!puzzleScreen || !resultScreen || !tbody || !checkButton || !errorMessage) {
             return;
         }
@@ -203,6 +210,7 @@
             card.dataset.value = value;
             card.textContent = value;
 
+            // ── Mouse drag-and-drop (desktop) ──────────────────────────────
             card.addEventListener('dragstart', function (event) {
                 draggedCard = card;
                 event.dataTransfer.effectAllowed = 'move';
@@ -212,6 +220,7 @@
                 draggedCard = null;
             });
 
+            // ── Tap-to-select (desktop & mobile fallback) ──────────────────
             card.addEventListener('click', function (event) {
                 event.stopPropagation();
 
@@ -233,6 +242,99 @@
 
                 setSelectedCard(card);
             });
+
+            // ── Touch drag-and-drop (mobile) ───────────────────────────────
+            card.addEventListener('touchstart', function (event) {
+                if (event.touches.length !== 1) {
+                    return;
+                }
+                event.preventDefault(); // prevents scroll while dragging a card
+
+                const touch = event.touches[0];
+                const rect = card.getBoundingClientRect();
+                touchOffsetX = touch.clientX - rect.left;
+                touchOffsetY = touch.clientY - rect.top;
+                touchDragCard = card;
+
+                // Create a floating visual clone
+                touchClone = card.cloneNode(true);
+                touchClone.style.cssText = [
+                    'position:fixed',
+                    'pointer-events:none',
+                    'z-index:9999',
+                    'width:' + rect.width + 'px',
+                    'opacity:0.85',
+                    'left:' + (touch.clientX - touchOffsetX) + 'px',
+                    'top:' + (touch.clientY - touchOffsetY) + 'px',
+                    'box-shadow:0 8px 24px rgba(0,0,0,0.45)',
+                    'transform:scale(1.08)',
+                    'transition:none',
+                ].join(';');
+                document.body.appendChild(touchClone);
+                card.style.opacity = '0.3';
+            }, { passive: false });
+
+            card.addEventListener('touchmove', function (event) {
+                if (!touchClone || !touchDragCard) {
+                    return;
+                }
+                event.preventDefault();
+
+                const touch = event.touches[0];
+                touchClone.style.left = (touch.clientX - touchOffsetX) + 'px';
+                touchClone.style.top = (touch.clientY - touchOffsetY) + 'px';
+
+                // Highlight the cell under the finger
+                touchClone.style.display = 'none';
+                const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+                touchClone.style.display = '';
+
+                const cell = elementUnder ? elementUnder.closest('td[data-category]') : null;
+
+                if (touchLastTarget && touchLastTarget !== cell) {
+                    touchLastTarget.classList.remove('ring-2', 'ring-sky-400');
+                }
+                touchLastTarget = cell;
+                if (cell && cell.dataset.category === touchDragCard.dataset.category) {
+                    cell.classList.add('ring-2', 'ring-sky-400');
+                }
+            }, { passive: false });
+
+            card.addEventListener('touchend', function (event) {
+                if (!touchClone || !touchDragCard) {
+                    return;
+                }
+                event.preventDefault();
+
+                // Clean up clone and highlight
+                touchClone.remove();
+                touchClone = null;
+                touchDragCard.style.opacity = '';
+
+                if (touchLastTarget) {
+                    touchLastTarget.classList.remove('ring-2', 'ring-sky-400');
+                }
+
+                const touch = event.changedTouches[0];
+                const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+                const targetCell = elementUnder ? elementUnder.closest('td[data-category]') : null;
+
+                if (
+                    targetCell &&
+                    targetCell.dataset.category === touchDragCard.dataset.category &&
+                    targetCell !== touchDragCard.parentElement
+                ) {
+                    const sourceCell = touchDragCard.parentElement;
+                    const existingCard = targetCell.querySelector('[draggable="true"]');
+                    if (existingCard) {
+                        sourceCell.appendChild(existingCard);
+                    }
+                    targetCell.appendChild(touchDragCard);
+                }
+
+                touchDragCard = null;
+                touchLastTarget = null;
+            }, { passive: false });
 
             return card;
         }
