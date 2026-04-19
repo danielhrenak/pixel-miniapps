@@ -71,11 +71,20 @@ class PagesController extends AppController
         }
     }
 
+    public function home()
+    {
+        $this->viewBuilder()->setLayout('tailwin');
+    }
+
     public function abc(): void
     {
         $this->viewBuilder()->disableAutoLayout();
     }
     public function abcgame(): void
+    {
+        $this->viewBuilder()->disableAutoLayout();
+    }
+    public function abcgame2(): void
     {
         $this->viewBuilder()->disableAutoLayout();
     }

@@ -85,6 +85,20 @@ class PagesControllerTest extends TestCase
     }
 
     /**
+     * Test custom alphabet game page route.
+     *
+     * @return void
+     */
+    public function testAbcGame2Page(): void
+    {
+        $this->get('/abcgame2');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('ABC Sprint');
+        $this->assertResponseContains('Abecedna hra #2');
+    }
+
+    /**
      * Test that CSRF protection is applied to page rendering.
      *
      * @return void

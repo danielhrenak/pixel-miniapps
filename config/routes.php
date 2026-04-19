@@ -55,9 +55,10 @@ return function (RouteBuilder $routes): void {
          * its action called 'display', and we pass a param to select the view file
          * to use (in this case, templates/Pages/home.php)...
          */
-        $builder->connect('/', ['controller' => 'Pages', 'action' => 'display', 'home']);
-        $builder->connect('/abc', ['controller' => 'Pages', 'action' => 'display', 'abc'], ['_name' => 'abc']);
-        $builder->connect('/abcgame', ['controller' => 'Pages', 'action' => 'display', 'abcgame'], ['_name' => 'abcgame']);
+        $builder->connect('/', ['controller' => 'Pages', 'action' => 'home']);
+        $builder->connect('/abc', ['controller' => 'Pages', 'action' => 'abc'], ['_name' => 'abc']);
+        $builder->connect('/abcgame', ['controller' => 'Pages', 'action' => 'abcgame'], ['_name' => 'abcgame']);
+        $builder->connect('/abcgame2', ['controller' => 'Pages', 'action' => 'abcgame2'], ['_name' => 'abcgame2']);
         $builder->connect('/papotv', ['controller' => 'Papo', 'action' => 'papotv'], ['_name' => 'papotv']);
         $builder->connect('/papotv/item', ['controller' => 'Papo', 'action' => 'item'], ['_name' => 'papotv_item']);
         $builder->connect('/papotv/image/{fileId}', ['controller' => 'Papo', 'action' => 'image'], ['_name' => 'papotv_image'])->setPass(['fileId']);
