@@ -88,4 +88,8 @@ class PagesController extends AppController
     {
         $this->viewBuilder()->disableAutoLayout();
     }
+    public function pismenkovaZahrada(): void
+    {
+        $this->viewBuilder()->disableAutoLayout();
+    }
 }

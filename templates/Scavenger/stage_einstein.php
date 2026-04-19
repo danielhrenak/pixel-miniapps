@@ -29,8 +29,12 @@
                 Režim <code>?vyries=1</code> je aktívny - tabuľka je predvyplnená správnym riešením.
             </p>
 
-            <div class="overflow-x-auto">
-                <table class="w-full min-w-[920px] border-collapse text-center text-sm md:text-base" id="einstein-table">
+            <p id="selected-banner" class="hidden rounded-xl border border-yellow-400/60 bg-yellow-400/10 px-4 py-2 text-center text-sm font-semibold text-yellow-200">
+                Vybrané: <span id="selected-banner-value"></span> — teraz klikni na cieľové políčko v rovnakom riadku
+            </p>
+
+            <div class="overflow-x-auto rounded-xl">
+                <table class="w-full min-w-[540px] border-collapse text-center text-sm md:text-base" id="einstein-table">
                     <thead>
                     <tr class="bg-slate-800/70 text-slate-100">
                         <th class="border border-slate-700 px-3 py-2">Dom</th>
@@ -151,8 +155,11 @@
         const checkButton = document.getElementById('check-solution');
         const errorMessage = document.getElementById('error-message');
         const solveHint = document.getElementById('solve-hint');
+        const selectedBanner = document.getElementById('selected-banner');
+        const selectedBannerValue = document.getElementById('selected-banner-value');
 
         let draggedCard = null;
+        let selectedCard = null;
         let hideErrorTimeout = null;
 
         if (!puzzleScreen || !resultScreen || !tbody || !checkButton || !errorMessage) {
@@ -170,9 +177,27 @@
             return copy;
         }
 
+        function setSelectedCard(card) {
+            if (selectedCard) {
+                selectedCard.classList.remove('ring-2', 'ring-yellow-300', 'scale-105');
+            }
+            selectedCard = card;
+            if (selectedBanner && selectedBannerValue) {
+                if (card) {
+                    selectedBannerValue.textContent = card.dataset.value;
+                    selectedBanner.classList.remove('hidden');
+                } else {
+                    selectedBanner.classList.add('hidden');
+                }
+            }
+            if (card) {
+                card.classList.add('ring-2', 'ring-yellow-300', 'scale-105');
+            }
+        }
+
         function createCard(categoryKey, value, cardClass) {
             const card = document.createElement('div');
-            card.className = 'cursor-move rounded-lg border px-2 py-2 text-slate-100 shadow ' + cardClass;
+            card.className = 'cursor-pointer select-none rounded-lg border px-2 py-2 text-slate-100 shadow transition-transform ' + cardClass;
             card.draggable = true;
             card.dataset.category = categoryKey;
             card.dataset.value = value;
@@ -185,6 +210,28 @@
 
             card.addEventListener('dragend', function () {
                 draggedCard = null;
+            });
+
+            card.addEventListener('click', function (event) {
+                event.stopPropagation();
+
+                if (selectedCard === card) {
+                    setSelectedCard(null);
+                    return;
+                }
+
+                if (selectedCard && selectedCard.dataset.category === card.dataset.category) {
+                    const sourceCell = selectedCard.parentElement;
+                    const targetCell = card.parentElement;
+                    if (sourceCell !== targetCell) {
+                        sourceCell.appendChild(card);
+                        targetCell.appendChild(selectedCard);
+                    }
+                    setSelectedCard(null);
+                    return;
+                }
+
+                setSelectedCard(card);
             });
 
             return card;
@@ -228,6 +275,31 @@
                 }
                 targetCell.appendChild(draggedCard);
             });
+
+            cell.addEventListener('click', function () {
+                if (!selectedCard) {
+                    return;
+                }
+
+                if (selectedCard.dataset.category !== cell.dataset.category) {
+                    showError('Presúvať môžeš iba v rámci toho istého riadku.');
+                    setSelectedCard(null);
+                    return;
+                }
+
+                const sourceCell = selectedCard.parentElement;
+                if (sourceCell === cell) {
+                    setSelectedCard(null);
+                    return;
+                }
+
+                const existingCard = cell.querySelector('[draggable="true"]');
+                if (existingCard) {
+                    sourceCell.appendChild(existingCard);
+                }
+                cell.appendChild(selectedCard);
+                setSelectedCard(null);
+            });
         }
 
         function buildBoard() {
@@ -235,7 +307,7 @@
                 const row = document.createElement('tr');
                 row.className = category.rowClass;
                 const labelCell = document.createElement('td');
-                labelCell.className = 'border border-slate-700 px-3 py-2 font-semibold ' + category.labelClass;
+                labelCell.className = 'border border-slate-700 px-2 py-2 font-semibold text-xs whitespace-nowrap sticky left-0 z-10 ' + category.labelClass;
                 labelCell.textContent = category.label;
                 row.appendChild(labelCell);
 
@@ -243,11 +315,13 @@
 
                 for (let i = 0; i < 5; i++) {
                     const cell = document.createElement('td');
-                    cell.className = 'border border-slate-700 px-2 py-2 align-top ' + category.rowClass;
+                    cell.className = 'border border-slate-700 px-1 py-1 align-top min-w-[90px] ' + category.rowClass;
                     cell.dataset.category = category.key;
                     cell.dataset.house = String(i);
                     makeDropCell(cell);
-                    cell.appendChild(createCard(category.key, values[i], category.cardClass));
+                    const card = createCard(category.key, values[i], category.cardClass);
+                    card.className = 'cursor-pointer select-none rounded-lg border px-2 py-3 text-slate-100 shadow transition-transform text-xs leading-tight w-full text-center min-h-[44px] flex items-center justify-center ' + category.cardClass;
+                    cell.appendChild(card);
                     row.appendChild(cell);
                 }
 

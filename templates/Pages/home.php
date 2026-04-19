@@ -37,6 +37,14 @@
                     <span>ABC GAME 2</span>
                     <span class="text-base text-emerald-300 transition group-hover:translate-x-0.5">-></span>
                 </a>
+
+                <a
+                    href="/pismenkova-zahrada"
+                    class="group inline-flex items-center justify-between rounded-2xl border border-amber-500/60 bg-amber-900/30 px-5 py-3 text-sm font-semibold text-amber-100 transition hover:scale-[1.01] hover:border-amber-300 hover:bg-amber-800/40"
+                >
+                    <span>PISMENKOVA ZAHRADA</span>
+                    <span class="text-base text-amber-300 transition group-hover:translate-x-0.5">-></span>
+                </a>
             </div>
 
             <p class="mt-6 text-center text-xs text-slate-400">Tip: na mobile si pridaj miniappku medzi zalozky pre rychly pristup.</p>

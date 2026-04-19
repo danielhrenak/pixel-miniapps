@@ -99,6 +99,20 @@ class PagesControllerTest extends TestCase
     }
 
     /**
+     * Test plain HTML/JS alphabet garden page route.
+     *
+     * @return void
+     */
+    public function testPismenkovaZahradaPage(): void
+    {
+        $this->get('/pismenkova-zahrada');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Pismenkova zahrada');
+        $this->assertResponseContains('Iba klavesnica');
+    }
+
+    /**
      * Test that CSRF protection is applied to page rendering.
      *
      * @return void
