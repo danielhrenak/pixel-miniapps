@@ -67,7 +67,7 @@
                         <tbody>
                             <tr>
                                 <td class="border border-slate-700 px-4 py-3 font-semibold">1x</td>
-                                <td class="border border-slate-700 px-4 py-3"><img src="https://img.bricklink.com/P/5/7071pb11.jpg" alt="Skupina 1 - item 1" class="mx-auto h-20 w-20 object-contain"></td>
+                                <td class="border border-slate-700 px-4 py-3"><img src="https://img.bricklink.com/P/5/7071pb19.jpg" alt="Skupina 1 - item 1" class="mx-auto h-20 w-20 object-contain"></td>
                                 <td class="border border-slate-700 px-4 py-3"><img src="https://img.bricklink.com/P/1/7071pb15.jpg" alt="Skupina 2 - item 1" class="mx-auto h-20 w-20 object-contain"></td>
                                 <td class="border border-slate-700 px-4 py-3"><img src="https://img.bricklink.com/P/11/7071pb14.jpg" alt="Skupina 3 - item 1" class="mx-auto h-20 w-20 object-contain"></td>
                                 <td class="border border-slate-700 px-4 py-3"><img src="https://img.bricklink.com/P/63/7071pb11.jpg" alt="Skupina 4 - item 1" class="mx-auto h-20 w-20 object-contain"></td>
@@ -75,7 +75,7 @@
                             </tr>
                             <tr>
                                 <td class="border border-slate-700 px-4 py-3 font-semibold">1x</td>
-                                <td class="border border-slate-700 px-4 py-3"><img src="https://img.bricklink.com/P/5/54200.jpg" alt="Skupina 1 - item 2" class="mx-auto h-20 w-20 object-contain"></td>
+                                <td class="border border-slate-700 px-4 py-3"><img src="https://img.bricklink.com/P/11/54200.jpg" alt="Skupina 1 - item 2" class="mx-auto h-20 w-20 object-contain"></td>
                                 <td class="border border-slate-700 px-4 py-3"><img src="https://img.bricklink.com/P/156/54200.jpg" alt="Skupina 2 - item 2" class="mx-auto h-20 w-20 object-contain"></td>
                                 <td class="border border-slate-700 px-4 py-3"><img src="https://img.bricklink.com/P/11/54200.jpg" alt="Skupina 3 - item 2" class="mx-auto h-20 w-20 object-contain"></td>
                                 <td class="border border-slate-700 px-4 py-3"><img src="https://img.bricklink.com/P/63/54200.jpg" alt="Skupina 4 - item 2" class="mx-auto h-20 w-20 object-contain"></td>
