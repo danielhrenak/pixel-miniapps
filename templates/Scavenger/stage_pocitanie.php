@@ -80,33 +80,44 @@
 
 <script>
     (function () {
-        const SUCCESS_HIDE_MS = 1400;
-        const ERROR_HIDE_MS = 2800;
+        const SUCCESS_HIDE_MS = 3000;
+        const ERROR_HIDE_MS = 3000;
+        const LOCKOUT_SECONDS = 15;
 
         const questions = [
             {
-                text: 'Kolko biomov mame na PAPO vytlacenych na plagatikoch?',
-                answer: '14'
+                text: 'Koľko dverí je na 7. poschodí?',
+                answer: 25,
+                tolerance: 3,
+                type: 'number'
             },
             {
-                text: 'Kontrolna otazka 2: Kolko skupin je v tejto hre?',
-                answer: '5'
+                text: 'Koľko stoličiek je na 3. poschodí?',
+                answer: 120,
+                tolerance: 5,
+                type: 'number'
             },
             {
-                text: 'Kontrolna otazka 3: Kolko domov ma Einsteinova uloha?',
-                answer: '5'
+                text: 'Koľko rôznych biomov máme na stene pri PAPO?',
+                answer: 7,
+                type: 'number'
             },
             {
-                text: 'Kontrolna otazka 4: Kolko otazok ma tato etapa celkovo?',
-                answer: '6'
+                text: 'Koľko bielych smetných košov je dokopy na 7. a 3. poschodí?',
+                answer: 14,
+                tolerance: 2,
+                type: 'number'
             },
             {
-                text: 'Kontrolna otazka 5: Kolko dielikov je v prvom riadku odmeny?',
-                answer: '1'
+                text: 'Napíš text zo zrkadla na mužskom WC na 7. poschodí (pri dverách Diggy).',
+                answer: 'Zamestnanec mesiaca',
+                type: 'text'
             },
             {
-                text: 'Kontrolna otazka 6: Zopakuj odpoved z prvej otazky.',
-                answer: '14'
+                text: 'Koľko rastlín je spolu v LEGO + Warroom + Hybrid?',
+                answer: 10,
+                tolerance: 1,
+                type: 'number'
             }
         ];
 
@@ -116,31 +127,96 @@
         const questionText = document.getElementById('question-text');
         const answerForm = document.getElementById('answer-form');
         const answerInput = document.getElementById('answer-input');
+        const submitButton = answerForm ? answerForm.querySelector('button[type="submit"]') : null;
         const errorMessage = document.getElementById('error-message');
         const successMessage = document.getElementById('success-message');
 
         let currentStep = 0;
         let errorTimeout = null;
         let successTimeout = null;
+        let finalTransitionTimeout = null;
+        let lockoutInterval = null;
+        let lockoutUntil = 0;
 
-        if (!quizScreen || !resultScreen || !questionProgress || !questionText || !answerForm || !answerInput || !errorMessage || !successMessage) {
+        if (!quizScreen || !resultScreen || !questionProgress || !questionText || !answerForm || !answerInput || !errorMessage || !successMessage || !submitButton) {
             return;
         }
 
-        function normalize(value) {
-            return String(value).trim().toLowerCase();
+        function normalizeText(value) {
+            return String(value)
+                .trim()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/\p{M}/gu, '')
+                .replace(/\s+/g, ' ');
+        }
+
+        function parseNumber(value) {
+            const normalized = String(value).trim().replace(',', '.');
+            if (!normalized) {
+                return null;
+            }
+            const parsed = Number(normalized);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function isCorrectAnswer(item, providedRaw) {
+            if (item.type === 'number') {
+                const providedNumber = parseNumber(providedRaw);
+                if (providedNumber === null) {
+                    return {
+                        ok: false,
+                        message: ''
+                    };
+                }
+
+                const expectedNumber = Number(item.answer);
+                const tolerance = typeof item.tolerance === 'number' ? item.tolerance : 0;
+                const difference = Math.abs(providedNumber - expectedNumber);
+
+                if (difference > tolerance) {
+                    return {
+                        ok: false,
+                        message: ''
+                    };
+                }
+
+                const isExact = difference < Number.EPSILON;
+                if (!isExact && tolerance > 0) {
+                    return {
+                        ok: true,
+                        message: 'Netrafil si presne, ale si v tolerancii (+/- ' + tolerance + '). Spravna odpoved je ' + expectedNumber + '.'
+                    };
+                }
+
+                return {
+                    ok: true,
+                    message: 'Spravne! Pokracujeme dalej.'
+                };
+            }
+
+            const isTextMatch = normalizeText(providedRaw) === normalizeText(item.answer);
+            return {
+                ok: isTextMatch,
+                message: isTextMatch ? 'Spravne! Pokracujeme dalej.' : ''
+            };
         }
 
         function renderQuestion() {
             const total = questions.length;
             const item = questions[currentStep];
-            questionProgress.textContent = 'Otazka ' + (currentStep + 1) + '/' + total;
+            questionProgress.textContent = 'Otázka ' + (currentStep + 1) + '/' + total;
             questionText.textContent = item.text;
             answerInput.value = '';
             answerInput.focus();
         }
 
-        function showError() {
+        function showError(text) {
+            const span = errorMessage.querySelector('span span');
+            if (span) {
+                span.textContent = text || 'Nespravna odpoved, skus znova.';
+            }
+
             errorMessage.classList.remove('hidden');
             if (errorTimeout) {
                 clearTimeout(errorTimeout);
@@ -151,7 +227,8 @@
             }, ERROR_HIDE_MS);
         }
 
-        function showSuccessStep() {
+        function showSuccessStep(message) {
+            successMessage.textContent = message || 'Spravne! Pokracujeme dalej.';
             successMessage.classList.remove('hidden');
             if (successTimeout) {
                 clearTimeout(successTimeout);
@@ -162,30 +239,84 @@
             }, SUCCESS_HIDE_MS);
         }
 
+        function isLockedOut() {
+            return Date.now() < lockoutUntil;
+        }
+
+        function setFormDisabled(disabled) {
+            answerInput.disabled = disabled;
+            submitButton.disabled = disabled;
+            submitButton.classList.toggle('opacity-60', disabled);
+            submitButton.classList.toggle('cursor-not-allowed', disabled);
+        }
+
+        function stopLockoutCountdown() {
+            if (lockoutInterval) {
+                clearInterval(lockoutInterval);
+                lockoutInterval = null;
+            }
+            lockoutUntil = 0;
+            setFormDisabled(false);
+            answerInput.focus();
+        }
+
+        function startLockoutCountdown() {
+            stopLockoutCountdown();
+            lockoutUntil = Date.now() + LOCKOUT_SECONDS * 1000;
+            setFormDisabled(true);
+
+            const tick = function () {
+                const remainingMs = lockoutUntil - Date.now();
+                if (remainingMs <= 0) {
+                    stopLockoutCountdown();
+                    errorMessage.classList.add('hidden');
+                    return;
+                }
+
+                const remainingSeconds = Math.ceil(remainingMs / 1000);
+                showError('Nespravna odpoved. Dalsi pokus mozes zadat o ' + remainingSeconds + ' s.');
+            };
+
+            tick();
+            lockoutInterval = setInterval(tick, 250);
+        }
+
         answerForm.addEventListener('submit', function (event) {
             event.preventDefault();
 
-            const item = questions[currentStep];
-            const provided = normalize(answerInput.value);
-            const expected = normalize(item.answer);
+            if (isLockedOut()) {
+                return;
+            }
 
-            if (provided !== expected) {
-                showError();
+            const item = questions[currentStep];
+            const provided = answerInput.value;
+            const evaluation = isCorrectAnswer(item, provided);
+
+            if (!evaluation.ok) {
                 answerInput.focus();
                 answerInput.select();
+                startLockoutCountdown();
                 return;
             }
 
             errorMessage.classList.add('hidden');
 
             if (currentStep === questions.length - 1) {
-                quizScreen.classList.add('hidden');
-                resultScreen.classList.remove('hidden');
+                showSuccessStep(evaluation.message);
+
+                if (finalTransitionTimeout) {
+                    clearTimeout(finalTransitionTimeout);
+                }
+                finalTransitionTimeout = setTimeout(function () {
+                    quizScreen.classList.add('hidden');
+                    resultScreen.classList.remove('hidden');
+                    finalTransitionTimeout = null;
+                }, SUCCESS_HIDE_MS);
                 return;
             }
 
             currentStep += 1;
-            showSuccessStep();
+            showSuccessStep(evaluation.message);
             renderQuestion();
         });
 
