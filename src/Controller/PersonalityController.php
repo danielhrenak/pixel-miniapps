@@ -5,94 +5,21 @@ namespace App\Controller;
 
 use Cake\Routing\Router;
 
-class ScavengerController extends AppController
+class PersonalityController extends AppController
 {
-    public function index(): void
-    {
-        $this->viewBuilder()->setLayout('tailwin');
-        $this->set('items', $this->buildStageItems());
-    }
 
     public function qrIndex(): void
+
+    public function prod(): void
     {
-        $this->viewBuilder()->setLayout('tailwin');
-        $this->set('items', $this->buildStageItems());
+        $this->viewBuilder()->setLayout('empty');
     }
 
-    /**
-     * @return array<int, array{title:string,description:string,url:string,qrUrl:string}>
-     */
-    private function buildStageItems(): array
+    public function cm(): void
     {
-        $stages = [
-            ['title' => 'Stage 9', 'route' => 'scavenger_stage9', 'description' => 'Rozlusti emoji sifru a zadaj spravne heslo.'],
-            ['title' => 'Stage Sudoku', 'route' => 'scavenger_stage_sudoku', 'description' => 'Vyries sudoku a opis spodny riadok bez medzier.'],
-            ['title' => 'Stage Einstein', 'route' => 'scavenger_stage_einstein', 'description' => 'Poskladaj Einsteinovu hadanku presne podla indicií.'],
-            ['title' => 'Stage Pocitanie', 'route' => 'scavenger_stage_pocitanie', 'description' => 'Postupne odpovedz na seriu otazok a odomkni odmenu.'],
-            ['title' => 'Stage Floppy', 'route' => 'scavenger_stage_floppy', 'description' => 'Prelet cez prekazky vo Floppy Bird hre aj na mobile.'],
-            ['title' => 'Stage Timebomb', 'route' => 'scavenger_stage_timebomb', 'description' => 'Co najpresnejsie odhadni 10 sekund bez hodin.'],
-            ['title' => 'Stage Memory', 'route' => 'scavenger_stage_memory', 'description' => 'Zapamataj si chaoticku scenu a odpovedz na pamatove otazky.'],
-            ['title' => 'Stage Mastermind', 'route' => 'scavenger_stage_mastermind', 'description' => 'Uhádni tajný 4-farebný kód do 8 pokusov a odomkni postupnú odmenu.'],
-            ['title' => 'Stage Code', 'route' => 'scavenger_stage_code', 'description' => '.'],
-        ];
-
-        $items = array_map(function (array $stage): array {
-            $url = Router::url(['_name' => $stage['route']], true);
-
-            return [
-                'title' => $stage['title'],
-                'description' => $stage['description'],
-                'url' => $url,
-                'qrUrl' => 'https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=' . rawurlencode($url),
-            ];
-        }, $stages);
-
-        return $items;
+        $this->viewBuilder()->setLayout('empty');
     }
 
-    public function stage9(): void
-    {
-        $this->viewBuilder()->setLayout('tailwin');
-    }
 
-    public function stageSudoku(): void
-    {
-        $this->viewBuilder()->setLayout('tailwin');
-    }
-
-    public function stageEinstein(): void
-    {
-        $this->viewBuilder()->setLayout('tailwin');
-    }
-
-    public function stagePocitanie(): void
-    {
-        $this->viewBuilder()->setLayout('tailwin');
-    }
-
-    public function stageFloppy(): void
-    {
-        $this->viewBuilder()->setLayout('tailwin');
-    }
-
-    public function stageTimebomb(): void
-    {
-        $this->viewBuilder()->setLayout('tailwin');
-    }
-
-    public function stageMemory(): void
-    {
-        $this->viewBuilder()->setLayout('tailwin');
-    }
-
-    public function stageMastermind(): void
-    {
-        $this->viewBuilder()->setLayout('tailwin');
-    }
-
-    public function stageCode(): void
-    {
-        $this->viewBuilder()->setLayout('tailwin');
-    }
 }
 
