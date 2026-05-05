@@ -20,7 +20,7 @@
         @media print {
             @page {
                 size: A4;
-                margin: 8mm;
+                margin: 6mm;
             }
             * {
                 -webkit-print-color-adjust: exact !important;
@@ -30,6 +30,7 @@
                 background: white !important;
                 padding: 0 !important;
                 margin: 0 !important;
+                line-height: 1.2 !important;
             }
             .print-header {
                 display: none !important;
@@ -41,60 +42,94 @@
             .cards-grid {
                 display: grid !important;
                 grid-template-columns: repeat(3, 1fr) !important;
-                gap: 4mm !important;
+                gap: 2.5mm !important;
                 width: 100% !important;
             }
             .person-card-container {
                 break-inside: avoid !important;
                 page-break-inside: avoid !important;
-                font-size: 9pt !important;
+                font-size: 8pt !important;
+                max-height: 135mm !important;
+                overflow: hidden;
             }
             /* Kompaktné rozmery karty */
             .card-header {
-                padding: 4mm !important;
+                padding: 3mm !important;
             }
             .card-header img {
-                width: 14mm !important;
-                height: 14mm !important;
-                border-radius: 2mm !important;
+                width: 13mm !important;
+                height: 13mm !important;
+                border-radius: 1.5mm !important;
             }
             .card-header h2 {
-                font-size: 13pt !important;
-                line-height: 1.1 !important;
+                font-size: 11pt !important;
+                line-height: 1 !important;
+                margin: 0 !important;
             }
             .card-header p {
-                font-size: 7.5pt !important;
-                margin-top: 0.5mm !important;
+                font-size: 6.5pt !important;
+                margin: 0.3mm 0 0 0 !important;
+            }
+            .card-header .flex {
+                gap: 2mm !important;
+            }
+            .card-header span {
+                font-size: 6.5pt !important;
+                padding: 0.3mm 1mm !important;
             }
             .card-body {
-                padding: 3mm 4mm !important;
+                padding: 2mm 3mm !important;
+                gap: 1.5mm !important;
             }
             .card-section {
-                padding-bottom: 2mm !important;
-                margin-bottom: 2mm !important;
+                padding-bottom: 1.5mm !important;
+                margin-bottom: 1.5mm !important;
             }
             .card-section-label {
-                font-size: 6.5pt !important;
-                margin-bottom: 1mm !important;
+                font-size: 6pt !important;
+                margin-bottom: 0.5mm !important;
+                margin: 0 !important;
             }
             .card-section h3 {
-                font-size: 10pt !important;
-                margin-bottom: 1mm !important;
+                font-size: 9pt !important;
+                margin-bottom: 0.5mm !important;
+                margin: 0 0 0.5mm 0 !important;
+                line-height: 1 !important;
             }
             .card-section p {
-                font-size: 7pt !important;
-                line-height: 1.3 !important;
+                font-size: 6.5pt !important;
+                line-height: 1.25 !important;
                 margin: 0 !important;
             }
             .card-section .badge {
-                font-size: 7pt !important;
-                padding: 0.5mm 2mm !important;
+                font-size: 6.5pt !important;
+                padding: 0.3mm 1.5mm !important;
             }
             .card-section .trait-badge {
-                font-size: 6.5pt !important;
-                padding: 0.5mm 1.5mm !important;
+                font-size: 6pt !important;
+                padding: 0.3mm 1mm !important;
+                margin: 0 !important;
             }
-
+            .card-section .flex {
+                gap: 0.5mm !important;
+            }
+            .card-section .flex.flex-wrap {
+                gap: 1mm !important;
+            }
+            .card-section .border {
+                border-width: 1px !important;
+            }
+            .card-header .border-b-4 {
+                border-bottom-width: 2px !important;
+            }
+            .card-section .border-b {
+                border-bottom-width: 1px !important;
+            }
+            .truncate {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
         }
     </style>
     <script src="https://unpkg.com/lucide@latest"></script>
