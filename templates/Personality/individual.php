@@ -20,7 +20,7 @@
         @media print {
             @page {
                 size: A4;
-                margin: 10mm;
+                margin: 8mm;
             }
             * {
                 -webkit-print-color-adjust: exact !important;
@@ -29,6 +29,7 @@
             body {
                 background: white !important;
                 padding: 0 !important;
+                margin: 0 !important;
             }
             .print-header {
                 display: none !important;
@@ -36,6 +37,64 @@
             .no-print {
                 display: none !important;
             }
+            /* Grid: 3 stĺpce, kompaktné karty → 6 kartičiek na A4 */
+            .cards-grid {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 4mm !important;
+                width: 100% !important;
+            }
+            .person-card-container {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                font-size: 9pt !important;
+            }
+            /* Kompaktné rozmery karty */
+            .card-header {
+                padding: 4mm !important;
+            }
+            .card-header img {
+                width: 14mm !important;
+                height: 14mm !important;
+                border-radius: 2mm !important;
+            }
+            .card-header h2 {
+                font-size: 13pt !important;
+                line-height: 1.1 !important;
+            }
+            .card-header p {
+                font-size: 7.5pt !important;
+                margin-top: 0.5mm !important;
+            }
+            .card-body {
+                padding: 3mm 4mm !important;
+            }
+            .card-section {
+                padding-bottom: 2mm !important;
+                margin-bottom: 2mm !important;
+            }
+            .card-section-label {
+                font-size: 6.5pt !important;
+                margin-bottom: 1mm !important;
+            }
+            .card-section h3 {
+                font-size: 10pt !important;
+                margin-bottom: 1mm !important;
+            }
+            .card-section p {
+                font-size: 7pt !important;
+                line-height: 1.3 !important;
+                margin: 0 !important;
+            }
+            .card-section .badge {
+                font-size: 7pt !important;
+                padding: 0.5mm 2mm !important;
+            }
+            .card-section .trait-badge {
+                font-size: 6.5pt !important;
+                padding: 0.5mm 1.5mm !important;
+            }
+
         }
     </style>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -56,7 +115,7 @@
         </header>
 
         <!-- Grid kartičiek -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-max">
+        <div class="cards-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
             <!-- Kartičky sa vložia tu -->
         </div>
     </div>
@@ -137,56 +196,46 @@
                 const groupConfig = groupConfigs[person.group];
 
                 const cardHtml = `
-                    <div class="person-card-container rounded-3xl shadow-xl overflow-hidden border-2 ${groupConfig.borderColor} hover:shadow-2xl transition-all duration-300">
+                    <div class="person-card-container rounded-2xl shadow-lg overflow-hidden border-2 ${groupConfig.borderColor} hover:shadow-xl transition-all duration-300">
                         <!-- Farebný header -->
-                        <div class="${groupConfig.color} ${groupConfig.borderColor} border-b-4 p-6 pb-4">
-                            <div class="flex items-start justify-between gap-4 mb-4">
-                                <div class="flex-1">
-                                    <h2 class="text-3xl font-black ${groupConfig.accentColor} tracking-tight">${person.nick}</h2>
-                                    <p class="text-sm text-slate-600 font-bold mt-1">${person.name}</p>
+                        <div class="card-header ${groupConfig.color} ${groupConfig.borderColor} border-b-4 p-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <h2 class="text-2xl font-black ${groupConfig.accentColor} tracking-tight leading-none">${person.nick}</h2>
+                                    <p class="text-xs text-slate-600 font-bold mt-0.5 truncate">${person.name}</p>
+                                    <div class="flex items-center gap-1.5 mt-2">
+                                        <span class="font-black text-[11px] ${groupConfig.accentColor} bg-white/80 px-2 py-0.5 rounded-md border border-current/20">
+                                            ${person.personality}
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 ${groupConfig.badgeColor} px-2 py-0.5 rounded-md font-bold text-[11px] border">
+                                            <i data-lucide="${groupConfig.icon}" class="w-3 h-3"></i>
+                                            ${groupConfig.title}
+                                        </span>
+                                    </div>
                                 </div>
                                 <img src="${person.photo}" alt="${person.name}" 
-                                     class="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-md"
+                                     class="w-16 h-16 rounded-xl object-cover border-4 border-white shadow-md flex-shrink-0"
                                      onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(person.name)}&background=random'">
                             </div>
                         </div>
 
                         <!-- Obsah -->
-                        <div class="p-6 bg-white">
+                        <div class="card-body p-4 bg-white flex flex-col gap-3">
                             <!-- Personality typ -->
-                            <div class="mb-4 pb-4 border-b-2 border-slate-100">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="text-xs font-black uppercase tracking-widest text-slate-400">Personality Type</span>
-                                </div>
-                                <h3 class="text-2xl font-black ${groupConfig.accentColor} mb-2">${personalityInfo?.title || personalityCode}</h3>
-                                <div class="flex items-center gap-2 mb-3">
-                                    <span class="font-black text-sm ${groupConfig.accentColor} bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">
-                                        ${person.personality}
-                                    </span>
-                                    <span class="font-bold text-xs text-slate-500 bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">
-                                        ${person.role}
-                                    </span>
-                                </div>
-                                <p class="text-sm text-slate-600 italic leading-relaxed">
+                            <div class="card-section pb-3 border-b border-slate-100">
+                                <p class="card-section-label text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Personality</p>
+                                <h3 class="text-base font-black ${groupConfig.accentColor} leading-none mb-1">${personalityInfo?.title || personalityCode}</h3>
+                                <p class="text-[11px] text-slate-500 italic leading-snug">
                                     "${personalityInfo?.description || ''}"
                                 </p>
                             </div>
 
-                            <!-- Kategória -->
-                            <div class="mb-4 pb-4 border-b-2 border-slate-100">
-                                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Team Role</p>
-                                <span class="inline-flex items-center gap-2 ${groupConfig.badgeColor} px-3 py-1.5 rounded-xl font-bold text-sm border">
-                                    <i data-lucide="${groupConfig.icon}" class="w-4 h-4"></i>
-                                    ${groupConfig.title}
-                                </span>
-                            </div>
-
                             <!-- Kľúčové rysy -->
-                            <div class="mb-4 pb-4 border-b-2 border-slate-100">
-                                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Key Traits</p>
-                                <div class="flex flex-wrap gap-2">
+                            <div class="card-section pb-3 border-b border-slate-100">
+                                <p class="card-section-label text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Key Traits</p>
+                                <div class="flex flex-wrap gap-1">
                                     ${personalityInfo?.keyTraits.map(trait => `
-                                        <span class="text-xs font-bold px-2.5 py-1 rounded-lg border-2 ${groupConfig.borderColor} text-slate-700 bg-white">
+                                        <span class="trait-badge text-[10px] font-bold px-2 py-0.5 rounded border-2 ${groupConfig.borderColor} text-slate-700 bg-white">
                                             ${trait}
                                         </span>
                                     `).join('')}
@@ -194,11 +243,11 @@
                             </div>
 
                             <!-- Vlastnosti -->
-                            <div>
-                                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Characteristics</p>
-                                <div class="flex flex-wrap gap-2">
+                            <div class="card-section">
+                                <p class="card-section-label text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Characteristics</p>
+                                <div class="flex flex-wrap gap-1">
                                     ${personalityInfo?.traits.map(trait => `
-                                        <span class="text-xs font-medium px-2.5 py-1.5 rounded-lg ${groupConfig.solidColor} text-white shadow-sm">
+                                        <span class="trait-badge text-[10px] font-medium px-2 py-0.5 rounded-md ${groupConfig.solidColor} text-white">
                                             ${trait}
                                         </span>
                                     `).join('')}
@@ -206,11 +255,6 @@
                             </div>
                         </div>
 
-                        <!-- Footer -->
-                        <div class="${groupConfig.color} border-t-2 ${groupConfig.borderColor} px-6 py-3 flex items-center justify-between">
-                            <span class="text-xs font-bold text-slate-500">16 Personalities</span>
-                            <span class="text-xs font-black ${groupConfig.accentColor}">TEAM DNA</span>
-                        </div>
                     </div>
                 `;
 
