@@ -8,7 +8,6 @@ use Cake\Routing\Router;
 class PersonalityController extends AppController
 {
 
-    public function qrIndex(): void
 
     public function prod(): void
     {
