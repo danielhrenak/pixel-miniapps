@@ -10,6 +10,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Špeciálne štýly pre tlač a layout */
+        .print-only {
+            display: none;
+        }
+
+        body.print-segment-mode .segment-section {
+            display: none !important;
+        }
+
+        body.print-segment-mode .segment-section.print-target {
+            display: flex !important;
+        }
+
         @media print {
             @page {
                 size: A4;
@@ -23,6 +35,24 @@
             .print\:hidden {
                 display: none !important;
             }
+
+            .print-only {
+                display: block !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            body.print-segment-mode #chart-container {
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+            }
+
+            body.print-segment-mode #segments-grid {
+                display: block !important;
+            }
             /* Každý segment na jednu A4 stranu */
             .segment-section {
                 height: 297mm; /* Výška A4 */
@@ -35,6 +65,16 @@
                 display: flex !important;
                 flex-direction: column !important;
                 background-color: white !important;
+            }
+
+            body.print-segment-mode .segment-section {
+                display: none !important;
+            }
+
+            body.print-segment-mode .segment-section.print-target {
+                display: flex !important;
+                page-break-after: auto;
+                break-after: auto;
             }
         }
 
@@ -61,6 +101,11 @@
             <p class="text-slate-400 mt-4 text-xl font-medium max-w-2xl mx-auto">
                 Prieskum našich kolektívnych kognitívnych funkcií a osobnostných archetypov na základe 16personalities.
             </p>
+            <div class="mt-8">
+                <button type="button" id="print-all-btn" class="no-print inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider shadow-lg hover:bg-slate-800 transition-colors">
+                    Tlačiť všetky segmenty
+                </button>
+            </div>
         </header>
 
         <!-- Hlavný graf -->
@@ -159,7 +204,12 @@
                 }, {});
 
                 const segmentHtml = `
-                    <div class="flex-1 min-h-[500px] p-8 ${config.color} border ${config.borderColor} flex flex-col gap-6 relative overflow-hidden segment-section">
+                    <div class="flex-1 min-h-[500px] p-8 ${config.color} border ${config.borderColor} flex flex-col gap-6 relative overflow-hidden segment-section" data-segment="${groupName}">
+                        <div class="absolute top-4 right-4 z-20 no-print">
+                            <button type="button" class="segment-print-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-700 shadow-sm hover:bg-slate-50" data-segment-target="${groupName}">
+                                Tlačiť segment
+                            </button>
+                        </div>
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-4">
                                 <div class="p-3 rounded-2xl bg-white shadow-sm border border-slate-100 scale-125">
@@ -249,7 +299,42 @@
 
             // Inicializácia ikon
             lucide.createIcons();
+
+            const printAllBtn = document.getElementById('print-all-btn');
+            if (printAllBtn) {
+                printAllBtn.addEventListener('click', () => {
+                    document.body.classList.remove('print-segment-mode');
+                    document.querySelectorAll('.segment-section').forEach(section => {
+                        section.classList.remove('print-target');
+                    });
+                    window.print();
+                });
+            }
+
+            document.querySelectorAll('.segment-print-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const target = button.getAttribute('data-segment-target');
+                    if (!target) {
+                        return;
+                    }
+
+                    document.body.classList.add('print-segment-mode');
+                    document.querySelectorAll('.segment-section').forEach(section => {
+                        const isTarget = section.getAttribute('data-segment') === target;
+                        section.classList.toggle('print-target', isTarget);
+                    });
+
+                    window.print();
+                });
+            });
         }
+
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('print-segment-mode');
+            document.querySelectorAll('.segment-section').forEach(section => {
+                section.classList.remove('print-target');
+            });
+        });
 
         document.addEventListener('DOMContentLoaded', init);
     </script>
