@@ -78,6 +78,7 @@ return function (RouteBuilder $routes): void {
 
         $builder->connect('/personality/prod', ['controller' => 'Personality', 'action' => 'prod'], ['_name' => 'personality_prod']);
         $builder->connect('/personality/cm', ['controller' => 'Personality', 'action' => 'cm'], ['_name' => 'personality_cm']);
+        $builder->connect('/personality/individual', ['controller' => 'Personality', 'action' => 'individual'], ['_name' => 'personality_individual']);
 
         /*
          * ...and connect the rest of 'Pages' controller's URLs.

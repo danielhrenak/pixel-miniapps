@@ -19,6 +19,11 @@ class PersonalityController extends AppController
         $this->viewBuilder()->setLayout('empty');
     }
 
+    public function individual(): void
+    {
+        $this->viewBuilder()->setLayout('empty');
+    }
+
 
 }
 
