@@ -57,15 +57,17 @@
             }
             /* Každý segment na jednu A4 stranu */
             .segment-section {
-                height: 297mm; /* Výška A4 */
-                width: 210mm;  /* Šírka A4 */
+                height: 277mm; /* 297mm A4 - 10mm top - 10mm bottom padding */
+                width: 190mm;  /* 210mm A4 - 10mm left - 10mm right padding */
+                margin: 0 auto !important;
                 page-break-after: always;
                 break-after: page;
-                padding: 15mm !important;
+                padding: 10mm !important;
                 overflow: hidden;
                 position: relative;
                 display: flex !important;
                 flex-direction: column !important;
+                justify-content: flex-start;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
