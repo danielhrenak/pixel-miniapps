@@ -27,10 +27,12 @@
                 size: A4;
                 margin: 0;
             }
-            body {
-                background-color: white !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+             * {
+                 -webkit-print-color-adjust: exact !important;
+                 print-color-adjust: exact !important;
+             }
+             body {
+                 background-color: white !important;
             }
             .print\:hidden {
                 display: none !important;
@@ -64,7 +66,8 @@
                 position: relative;
                 display: flex !important;
                 flex-direction: column !important;
-                background-color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             body.print-segment-mode .segment-section {
