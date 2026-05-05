@@ -57,7 +57,7 @@
             }
             /* Každý segment na jednu A4 stranu */
             .segment-section {
-                height: 277mm; /* 297mm A4 - 10mm top - 10mm bottom padding */
+                max-height: 297mm; /* Maximum A4 height */
                 width: 190mm;  /* 210mm A4 - 10mm left - 10mm right padding */
                 margin: 0 auto !important;
                 page-break-after: always;
@@ -81,6 +81,121 @@
                 page-break-after: auto;
                 break-after: auto;
             }
+
+            /* Optimalizácia veľkostí pre tlač */
+            @media print {
+                #segments-grid {
+                    display: block !important;
+                }
+
+                .segment-section {
+                    padding: 6mm !important;
+                }
+
+                .segment-section > div:first-child {
+                    gap: 1rem !important;
+                    margin-bottom: 0.5rem !important;
+                }
+
+                .segment-section > div:first-child h2 {
+                    font-size: 1.3rem !important;
+                    margin-bottom: 0.25rem !important;
+                }
+
+                .segment-section > div:first-child p {
+                    font-size: 0.65rem !important;
+                    margin: 0 !important;
+                    line-height: 1.2 !important;
+                }
+
+                .segment-section > .flex.flex-col.gap-4 {
+                    gap: 0.5rem !important;
+                    overflow-y: auto;
+                    max-height: 230mm;
+                }
+
+                .bg-white\/80 {
+                    gap: 0.5rem !important;
+                    padding: 0.5rem !important;
+                }
+
+                .bg-white\/80 > div:first-child {
+                    gap: 0.75rem !important;
+                    padding-bottom: 0.5rem !important;
+                    margin-bottom: 0.5rem !important;
+                }
+
+                .bg-white\/80 h3 {
+                    font-size: 0.75rem !important;
+                    margin-bottom: 0.25rem !important;
+                }
+
+                .bg-white\/80 p {
+                    font-size: 0.6rem !important;
+                    margin: 0 !important;
+                    line-height: 1.2 !important;
+                }
+
+                .person-card {
+                    width: 3.5rem !important;
+                    flex-shrink: 0;
+                }
+
+                .person-card img {
+                    width: 2.25rem !important;
+                    height: 2.25rem !important;
+                }
+
+                .person-card h5 {
+                    font-size: 0.6rem !important;
+                    margin: 0 !important;
+                }
+
+                .person-card p {
+                    font-size: 0.5rem !important;
+                    margin: 0 !important;
+                }
+
+                .flex.gap-1 {
+                    gap: 0.25rem !important;
+                }
+
+                .flex.gap-2 {
+                    gap: 0.5rem !important;
+                }
+
+                .text-\[9px\],
+                .text-\[10px\] {
+                    font-size: 0.6rem !important;
+                }
+
+                .text-xs {
+                    font-size: 0.65rem !important;
+                }
+
+                .text-sm {
+                    font-size: 0.75rem !important;
+                }
+
+                .text-3xl {
+                    font-size: 1.3rem !important;
+                }
+
+                .rounded-2xl {
+                    border-radius: 0.5rem !important;
+                }
+
+                .px-3,
+                .px-4 {
+                    padding-left: 0.5rem !important;
+                    padding-right: 0.5rem !important;
+                }
+
+                .py-1\.5,
+                .py-0\.5 {
+                    padding-top: 0.25rem !important;
+                    padding-bottom: 0.25rem !important;
+                }
         }
 
         /* Jemné animácie pre hover */
@@ -209,7 +324,7 @@
                 }, {});
 
                 const segmentHtml = `
-                    <div class="flex-1 min-h-[500px] p-8 ${config.color} border ${config.borderColor} flex flex-col gap-6 relative overflow-hidden segment-section" data-segment="${groupName}">
+                    <div class="flex-1 p-8 ${config.color} border ${config.borderColor} flex flex-col gap-6 relative overflow-hidden segment-section" data-segment="${groupName}">
                         <div class="absolute top-4 right-4 z-20 no-print">
                             <button type="button" class="segment-print-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-700 shadow-sm hover:bg-slate-50" data-segment-target="${groupName}">
                                 Tlačiť segment
