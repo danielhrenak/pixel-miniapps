@@ -233,7 +233,7 @@
                 <!-- Legenda sa vloží sem -->
             </div>
             <p class="text-slate-300 text-[10px] font-bold uppercase tracking-[0.4em] mt-8">
-                © 2024 Pixel Federation · Behavioral Analytics Division
+                © 2026 Pixel Federation · Behavioral Analytics Division
             </p>
         </footer>
     </div>
