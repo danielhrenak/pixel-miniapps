@@ -212,15 +212,6 @@
     <div class="max-w-7xl mx-auto print:max-w-none">
         <!-- Hlavička -->
         <header class="mb-12 text-center relative print:hidden">
-            <div class="inline-block px-4 py-1.5 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.3em] mb-4 shadow-xl">
-                Psychological Mapping
-            </div>
-            <h1 class="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter italic">
-                TEAM <span class="text-slate-300">DNA</span>
-            </h1>
-            <p class="text-slate-400 mt-4 text-xl font-medium max-w-2xl mx-auto">
-                Prieskum našich kolektívnych kognitívnych funkcií a osobnostných archetypov na základe 16personalities.
-            </p>
             <div class="mt-8">
                 <button type="button" id="print-all-btn" class="no-print inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider shadow-lg hover:bg-slate-800 transition-colors">
                     Tlačiť všetky segmenty
