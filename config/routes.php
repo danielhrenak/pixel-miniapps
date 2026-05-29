@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Routes configuration.
  *
@@ -29,6 +30,7 @@ use Cake\Routing\RouteBuilder;
  * So you can use `$this` to reference the application class instance
  * if required.
  */
+
 return function (RouteBuilder $routes): void {
     /*
      * The default class to use for all routes
@@ -57,9 +59,11 @@ return function (RouteBuilder $routes): void {
          */
         $builder->connect('/', ['controller' => 'Pages', 'action' => 'home']);
         $builder->connect('/abc', ['controller' => 'Pages', 'action' => 'abc'], ['_name' => 'abc']);
+        $builder->connect('/test', ['controller' => 'Pages', 'action' => 'test'], ['_name' => 'test']);
         $builder->connect('/abcgame', ['controller' => 'Pages', 'action' => 'abcgame'], ['_name' => 'abcgame']);
         $builder->connect('/abcgame2', ['controller' => 'Pages', 'action' => 'abcgame2'], ['_name' => 'abcgame2']);
         $builder->connect('/pismenkova-zahrada', ['controller' => 'Pages', 'action' => 'pismenkovaZahrada'], ['_name' => 'pismenkova_zahrada']);
+        $builder->connect('/wat/sound', ['controller' => 'Pages', 'action' => 'sound'], ['_name' => 'wat_sound']);
         $builder->connect('/papotv', ['controller' => 'Papo', 'action' => 'papotv'], ['_name' => 'papotv']);
         $builder->connect('/papotv/item', ['controller' => 'Papo', 'action' => 'item'], ['_name' => 'papotv_item']);
         $builder->connect('/papotv/image/{fileId}', ['controller' => 'Papo', 'action' => 'image'], ['_name' => 'papotv_image'])->setPass(['fileId']);

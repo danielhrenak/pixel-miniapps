@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -14,6 +15,7 @@ declare(strict_types=1);
  * @since     0.2.9
  * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace App\Controller;
 
 use Cake\Core\Configure;
@@ -89,6 +91,18 @@ class PagesController extends AppController
         $this->viewBuilder()->disableAutoLayout();
     }
     public function pismenkovaZahrada(): void
+    {
+        $this->viewBuilder()->disableAutoLayout();
+    }
+
+    public function sound(): void
+    {
+        $this->viewBuilder()
+            ->disableAutoLayout()
+            ->setTemplatePath('Pages/wat');
+    }
+
+    public function test(): void
     {
         $this->viewBuilder()->disableAutoLayout();
     }
