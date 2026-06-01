@@ -10,9 +10,6 @@
             color-scheme: dark;
             --bg-1: #0f172a;
             --bg-2: #111827;
-            --panel: rgba(15, 23, 42, 0.82);
-            --text: #f8fafc;
-            --muted: #cbd5e1;
             --accent: #38bdf8;
             --accent-strong: #0ea5e9;
         }
@@ -27,32 +24,15 @@
             display: grid;
             place-items: center;
             font-family: Arial, sans-serif;
-            color: var(--text);
             background:
                 radial-gradient(circle at top, rgba(56, 189, 248, 0.28), transparent 35%),
                 linear-gradient(160deg, var(--bg-1), var(--bg-2));
         }
 
-        .card {
-            width: min(92vw, 560px);
-            padding: 32px;
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            border-radius: 24px;
-            background: var(--panel);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-            text-align: center;
-        }
-
-        h1 {
-            margin: 0 0 12px;
-            font-size: clamp(2.5rem, 10vw, 5rem);
-            letter-spacing: 0.08em;
-        }
-
-        p {
-            margin: 0 0 24px;
-            color: var(--muted);
-            line-height: 1.5;
+        .controls {
+            display: flex;
+            gap: 12px;
+            padding: 20px;
         }
 
         button {
@@ -72,13 +52,6 @@
             outline-offset: 4px;
         }
 
-        .status {
-            margin-top: 18px;
-            min-height: 1.4em;
-            color: var(--muted);
-            font-size: 0.95rem;
-        }
-
         audio {
             display: none;
         }
@@ -86,21 +59,17 @@
 </head>
 
 <body>
-    <main class="card">
-        <h1>WAT</h1>
-        <p>Stránka sa po otvorení pokúsi prehrať zvuk <strong>wat_refren.mp3</strong>.</p>
-        <button id="playButton" type="button">Play</button>
-        <div class="status" id="status">Načítavam zvuk...</div>
-        <audio id="watAudio" preload="auto" src="/sound/wat_refren.mp3"></audio>
+    <main class="controls">
+        <button id="toggleButton" type="button">Play</button>
     </main>
+    <audio id="watAudio" preload="auto" src="/sound/wat_refren.mp3"></audio>
 
     <script>
         const audio = document.getElementById('watAudio');
-        const playButton = document.getElementById('playButton');
-        const status = document.getElementById('status');
+        const toggleButton = document.getElementById('toggleButton');
 
         function syncButtonState() {
-            playButton.textContent = audio.paused ? 'Play' : 'Stop';
+            toggleButton.textContent = audio.paused ? 'Play' : 'Stop';
         }
 
         async function playSound() {
@@ -110,22 +79,17 @@
                 }
 
                 await audio.play();
-                status.textContent = 'Zvuk beží.';
-                syncButtonState();
             } catch (error) {
-                status.textContent = 'Prehliadač blokuje autoplay. Klikni na tlačidlo.';
-                syncButtonState();
+                // Ignore autoplay errors; user can start audio manually.
             }
         }
 
         function stopSound() {
             audio.pause();
             audio.currentTime = 0;
-            status.textContent = 'Zvuk zastavený.';
-            syncButtonState();
         }
 
-        playButton.addEventListener('click', () => {
+        toggleButton.addEventListener('click', () => {
             if (audio.paused) {
                 playSound();
                 return;
@@ -134,19 +98,9 @@
             stopSound();
         });
 
-        audio.addEventListener('play', () => {
-            status.textContent = 'Zvuk beží.';
-            syncButtonState();
-        });
-
-        audio.addEventListener('pause', () => {
-            syncButtonState();
-        });
-
-        audio.addEventListener('ended', () => {
-            status.textContent = 'Zvuk skončil.';
-            syncButtonState();
-        });
+        audio.addEventListener('play', syncButtonState);
+        audio.addEventListener('pause', syncButtonState);
+        audio.addEventListener('ended', syncButtonState);
 
         window.addEventListener('load', () => {
             syncButtonState();
