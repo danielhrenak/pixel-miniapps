@@ -288,18 +288,19 @@ class PapoController extends AppController
         $httpContext = stream_context_create([
             'http' => [
                 'method' => 'GET',
-                'header' => "User-Agent: pixel-miniapps-papotv\r\nAccept: application/vnd.github+json\r\n",
+                'header' => "User-Agent: pixel-miniapps-papotv\r\n",
                 'timeout' => 8,
             ],
         ]);
         $payloadRaw = @file_get_contents($gistApiUrl, false, $httpContext);
+        $rawCollected = [];
 
         if (is_string($payloadRaw) && $payloadRaw !== '') {
+            // First, try to parse as GitHub API JSON
             $payload = json_decode($payloadRaw, true);
 
             if (is_array($payload) && isset($payload['files']) && is_array($payload['files'])) {
-                $rawCollected = [];
-
+                // It's GitHub API format - process files array
                 foreach ($payload['files'] as $file) {
                     if (!is_array($file) || !isset($file['content']) || !is_string($file['content'])) {
                         continue;
@@ -310,31 +311,42 @@ class PapoController extends AppController
                         continue;
                     }
 
-                    $parsed = json_decode($content, true);
+                    // Try to parse file content as JSON first
+                    $parsed = json_decode($content, true, flags: JSON_INVALID_UTF8_IGNORE);
                     if (is_array($parsed)) {
                         $this->appendParsedItems($parsed, $rawCollected);
                     } else {
+                        // Not JSON - extract URLs from text
                         foreach ($this->extractUrlsFromText($content) as $url) {
                             $rawCollected[] = $url;
                         }
                     }
                 }
-
-                $seen = [];
-                foreach ($rawCollected as $rawItem) {
-                    $normalized = $this->normalizeServerItem($rawItem);
-                    if ($normalized === null) {
-                        continue;
-                    }
-
-                    $signature = sprintf('%s|%s', $normalized['url'], $normalized['type']);
-                    if (isset($seen[$signature])) {
-                        continue;
-                    }
-
-                    $seen[$signature] = true;
-                    $serverItems[] = $normalized;
+            } else {
+                // Not GitHub API format - treat as raw text
+                // Could be comma-separated URLs, JSON array, or one URL per line
+                foreach ($this->extractUrlsFromText($payloadRaw) as $url) {
+                    $rawCollected[] = $url;
                 }
+            }
+        }
+
+        // Process collected URLs
+        if ($rawCollected !== []) {
+            $seen = [];
+            foreach ($rawCollected as $rawItem) {
+                $normalized = $this->normalizeServerItem($rawItem);
+                if ($normalized === null) {
+                    continue;
+                }
+
+                $signature = sprintf('%s|%s', $normalized['url'], $normalized['type']);
+                if (isset($seen[$signature])) {
+                    continue;
+                }
+
+                $seen[$signature] = true;
+                $serverItems[] = $normalized;
             }
         }
 
@@ -544,9 +556,12 @@ class PapoController extends AppController
 
     private function extractUrlsFromText(string $text): array
     {
-        preg_match_all('/https?:\/\/[^\s"\'<>\],]+/i', $text, $matches);
+        // Match URLs - handles comma-separated lists like: url1, url2, url3
+        // Pattern: https?:// followed by characters excluding whitespace and common delimiters
+        preg_match_all('/https?:\/\/[^\s"\'<>,()[\]]+/i', $text, $matches);
 
-        return $matches[0] ?? [];
+        // Clean up and return valid URLs
+        return array_filter(array_map('trim', $matches[0] ?? []));
     }
 
     private function appendParsedItems(mixed $parsedValue, array &$target): void
