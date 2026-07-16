@@ -32,6 +32,8 @@ class PapoController extends AppController
 {
     private const SLIDES_CACHE_KEY = 'papotv_slides_v4';
     private const SLIDES_CACHE_CONFIG = 'papotv_slides';
+    private const SLIDES_CACHE_LAST_FORCE_REFRESH_KEY = 'papotv_slides_last_force_refresh_unix';
+    private const SLIDES_CACHE_FORCE_REFRESH_INTERVAL = 3600;
 
     public function papotv(): void
     {
@@ -256,6 +258,8 @@ class PapoController extends AppController
 
     private function getCachedPapotVSlideShowItems(): array
     {
+        $this->forceRefreshSlidesCacheIfDue();
+
         $cachedItems = Cache::read(self::SLIDES_CACHE_KEY, self::SLIDES_CACHE_CONFIG);
         if (is_array($cachedItems) && $cachedItems !== []) {
             return $cachedItems;
@@ -265,6 +269,20 @@ class PapoController extends AppController
         Cache::write(self::SLIDES_CACHE_KEY, $items, self::SLIDES_CACHE_CONFIG);
 
         return $items;
+    }
+
+    private function forceRefreshSlidesCacheIfDue(): void
+    {
+        $lastForceRefresh = Cache::read(self::SLIDES_CACHE_LAST_FORCE_REFRESH_KEY, 'default');
+        $lastForceRefreshTs = is_int($lastForceRefresh) ? $lastForceRefresh : 0;
+        $now = time();
+
+        if (($now - $lastForceRefreshTs) < self::SLIDES_CACHE_FORCE_REFRESH_INTERVAL) {
+            return;
+        }
+
+        Cache::delete(self::SLIDES_CACHE_KEY, self::SLIDES_CACHE_CONFIG);
+        Cache::write(self::SLIDES_CACHE_LAST_FORCE_REFRESH_KEY, $now, 'default');
     }
 
     private function getDefaultSlideItems(): array
@@ -281,7 +299,7 @@ class PapoController extends AppController
 
     private function getPapotVSlideShowItems(): array
     {
-        $gistApiUrl = 'https://gist.githubusercontent.com/danielhrenak/009f73574dc9efa5a00f65777f9d1a8f/raw/8176d53430472dfaa578cddeb564af5ee824dda5/gistfile1.txt';
+        $gistApiUrl = 'https://gist.githubusercontent.com/danielhrenak/009f73574dc9efa5a00f65777f9d1a8f/raw/2f0f1d946c83e7c27099f314ad94e836494b7277/PAPO%2520TV';
         $defaultItems = $this->getDefaultSlideItems();
 
         $serverItems = [];
