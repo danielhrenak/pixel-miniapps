@@ -55,8 +55,9 @@ class PapoController extends AppController
 
         $items = $this->getCachedPapotVSlideShowItems();
         $total = count($items);
-        $requestedIndex = (int)$this->request->getQuery('index', 0);
-        $normalizedIndex = $total > 0 ? (($requestedIndex % $total) + $total) % $total : 0;
+        $requestedCurrentIndex = (int)$this->request->getQuery('currentIndex', $this->request->getQuery('index', 0));
+        $normalizedCurrentIndex = $total > 0 ? (($requestedCurrentIndex % $total) + $total) % $total : 0;
+        $normalizedIndex = $this->pickRandomNextIndex($total, $normalizedCurrentIndex);
         $item = $items[$normalizedIndex] ?? $this->getDefaultSlideItems()[0];
 
         $payload = [
@@ -68,6 +69,20 @@ class PapoController extends AppController
         return $this->response
             ->withType('application/json')
             ->withStringBody((string)json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    }
+
+    private function pickRandomNextIndex(int $total, int $currentIndex): int
+    {
+        if ($total <= 1) {
+            return 0;
+        }
+
+        $nextIndex = random_int(0, $total - 1);
+        while ($nextIndex === $currentIndex) {
+            $nextIndex = random_int(0, $total - 1);
+        }
+
+        return $nextIndex;
     }
 
     public function image(string $fileId): Response

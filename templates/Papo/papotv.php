@@ -101,29 +101,29 @@
         };
     }
 
-    async function fetchSlide(index) {
+    async function fetchSlide(currentIndex) {
         if (!SLIDE_ENDPOINT) {
             throw new Error('Missing slide endpoint.');
         }
 
-        const response = await fetch(`${SLIDE_ENDPOINT}?index=${encodeURIComponent(index)}`, {
+        const response = await fetch(`${SLIDE_ENDPOINT}?currentIndex=${encodeURIComponent(currentIndex)}`, {
             headers: { 'Accept': 'application/json' },
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch slide ${index}: ${response.status}`);
+            throw new Error(`Failed to fetch next slide for current index ${currentIndex}: ${response.status}`);
         }
 
         const payload = await response.json();
         const item = normalizeSlideItem(payload.item);
         if (!item) {
-            throw new Error(`Invalid slide payload for index ${index}`);
+            throw new Error(`Invalid slide payload for current index ${currentIndex}`);
         }
 
         totalItems = Math.max(Number(payload.total || totalItems || 1), 1);
 
         return {
-            index: Number(payload.index ?? index),
+            index: Number(payload.index ?? currentIndex),
             item,
         };
     }
@@ -148,21 +148,6 @@
         preloadedElements.set(url, img);
     }
 
-    function getRandomIndex(excludedIndex = null) {
-        const total = Math.max(totalItems, 1);
-        if (total === 1) {
-            return 0;
-        }
-
-        let index = Math.floor(Math.random() * total);
-        if (excludedIndex !== null) {
-            while (index === excludedIndex) {
-                index = Math.floor(Math.random() * total);
-            }
-        }
-
-        return index;
-    }
 
     async function queueNextSlide() {
         if (!currentItem) {
@@ -171,15 +156,14 @@
             return;
         }
 
-        const nextIndex = getRandomIndex(currentIndex);
-        if (bufferedSlide && bufferedIndex === nextIndex) {
+        if (bufferedSlide && bufferedIndex !== null && bufferedIndex !== currentIndex) {
             return;
         }
         if (preloadPromise) {
             return preloadPromise;
         }
 
-        preloadPromise = fetchSlide(nextIndex)
+        preloadPromise = fetchSlide(currentIndex)
             .then((slide) => {
                 bufferedSlide = slide.item;
                 bufferedIndex = slide.index;
@@ -327,7 +311,7 @@
                     item: bufferedSlide,
                 };
             } else {
-                nextSlide = await fetchSlide(getRandomIndex(currentIndex));
+                nextSlide = await fetchSlide(currentIndex);
             }
 
             bufferedSlide = null;
