@@ -314,7 +314,7 @@ class PapoController extends AppController
 
     private function getPapotVSlideShowItems(): array
     {
-        $gistApiUrl = 'https://gist.githubusercontent.com/danielhrenak/009f73574dc9efa5a00f65777f9d1a8f/raw/2f0f1d946c83e7c27099f314ad94e836494b7277/PAPO%2520TV';
+        $gistApiUrl = 'https://gist.githubusercontent.com/danielhrenak/009f73574dc9efa5a00f65777f9d1a8f/raw/4893a5dbd7e94dd55d3b51992d8e857727673085/PAPO%2520TV';
         $defaultItems = $this->getDefaultSlideItems();
 
         $serverItems = [];
