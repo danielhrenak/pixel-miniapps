@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Cache\Cache;
+use Cake\Core\Configure;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use Cake\Routing\Router;
@@ -69,6 +70,58 @@ class PapoController extends AppController
         return $this->response
             ->withType('application/json')
             ->withStringBody((string)json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    }
+
+    public function admin(): void
+    {
+        $this->viewBuilder()->setLayout('empty');
+
+        $error = null;
+        $saved = false;
+        $content = $this->readLinksFileContent();
+
+        if ($this->request->is('post')) {
+            $password = (string)$this->request->getData('password', '');
+            $submittedContent = (string)$this->request->getData('links', '');
+
+            if (!$this->isAdminPasswordValid($password)) {
+                $error = 'Nesprávne heslo.';
+                // Preserve what the user typed so it is not lost on error.
+                $content = $submittedContent;
+            } elseif ($this->writeLinksFileContent($submittedContent)) {
+                $saved = true;
+                $content = $submittedContent;
+                $this->invalidateSlidesCache();
+            } else {
+                $error = 'Súbor sa nepodarilo uložiť.';
+                $content = $submittedContent;
+            }
+        }
+
+        $this->set('content', $content);
+        $this->set('error', $error);
+        $this->set('saved', $saved);
+        $this->set('csrfToken', (string)$this->request->getAttribute('csrfToken'));
+    }
+
+    private function isAdminPasswordValid(string $password): bool
+    {
+        $expected = (string)Configure::read('PapoTv.adminPassword', '');
+
+        return $expected !== '' && hash_equals($expected, $password);
+    }
+
+    private function writeLinksFileContent(string $content): bool
+    {
+        // Normalize line endings to \n.
+        $normalized = str_replace(["\r\n", "\r"], "\n", $content);
+
+        return @file_put_contents($this->getLinksFilePath(), $normalized) !== false;
+    }
+
+    private function invalidateSlidesCache(): void
+    {
+        Cache::delete(self::SLIDES_CACHE_KEY, self::SLIDES_CACHE_CONFIG);
     }
 
     private function pickRandomNextIndex(int $total, int $currentIndex): int
@@ -312,55 +365,37 @@ class PapoController extends AppController
         ];
     }
 
+    private function getLinksFilePath(): string
+    {
+        return TMP . 'papotv_links.txt';
+    }
+
+    private function readLinksFileContent(): string
+    {
+        $path = $this->getLinksFilePath();
+        if (!is_file($path)) {
+            return '';
+        }
+
+        $content = @file_get_contents($path);
+
+        return is_string($content) ? $content : '';
+    }
+
     private function getPapotVSlideShowItems(): array
     {
-        $gistApiUrl = 'https://gist.githubusercontent.com/danielhrenak/009f73574dc9efa5a00f65777f9d1a8f/raw/4893a5dbd7e94dd55d3b51992d8e857727673085/PAPO%2520TV';
         $defaultItems = $this->getDefaultSlideItems();
 
         $serverItems = [];
-        $httpContext = stream_context_create([
-            'http' => [
-                'method' => 'GET',
-                'header' => "User-Agent: pixel-miniapps-papotv\r\n",
-                'timeout' => 8,
-            ],
-        ]);
-        $payloadRaw = @file_get_contents($gistApiUrl, false, $httpContext);
         $rawCollected = [];
 
-        if (is_string($payloadRaw) && $payloadRaw !== '') {
-            // First, try to parse as GitHub API JSON
-            $payload = json_decode($payloadRaw, true);
+        // Read the link list from a local text file. The file may contain one
+        // URL per line and/or comma-separated URLs; extractUrlsFromText handles both.
+        $payloadRaw = $this->readLinksFileContent();
 
-            if (is_array($payload) && isset($payload['files']) && is_array($payload['files'])) {
-                // It's GitHub API format - process files array
-                foreach ($payload['files'] as $file) {
-                    if (!is_array($file) || !isset($file['content']) || !is_string($file['content'])) {
-                        continue;
-                    }
-
-                    $content = trim($file['content']);
-                    if ($content === '') {
-                        continue;
-                    }
-
-                    // Try to parse file content as JSON first
-                    $parsed = json_decode($content, true, flags: JSON_INVALID_UTF8_IGNORE);
-                    if (is_array($parsed)) {
-                        $this->appendParsedItems($parsed, $rawCollected);
-                    } else {
-                        // Not JSON - extract URLs from text
-                        foreach ($this->extractUrlsFromText($content) as $url) {
-                            $rawCollected[] = $url;
-                        }
-                    }
-                }
-            } else {
-                // Not GitHub API format - treat as raw text
-                // Could be comma-separated URLs, JSON array, or one URL per line
-                foreach ($this->extractUrlsFromText($payloadRaw) as $url) {
-                    $rawCollected[] = $url;
-                }
+        if ($payloadRaw !== '') {
+            foreach ($this->extractUrlsFromText($payloadRaw) as $url) {
+                $rawCollected[] = $url;
             }
         }
 
@@ -595,36 +630,6 @@ class PapoController extends AppController
 
         // Clean up and return valid URLs
         return array_filter(array_map('trim', $matches[0] ?? []));
-    }
-
-    private function appendParsedItems(mixed $parsedValue, array &$target): void
-    {
-        if (!is_array($parsedValue)) {
-            return;
-        }
-
-        if (array_is_list($parsedValue)) {
-            foreach ($parsedValue as $item) {
-                $target[] = $item;
-            }
-
-            return;
-        }
-
-        foreach (['url', 'src', 'href', 'link'] as $key) {
-            if (isset($parsedValue[$key]) && is_string($parsedValue[$key])) {
-                $target[] = $parsedValue;
-                break;
-            }
-        }
-
-        foreach (['urls', 'images', 'items', 'media'] as $key) {
-            if (isset($parsedValue[$key]) && is_array($parsedValue[$key])) {
-                foreach ($parsedValue[$key] as $item) {
-                    $target[] = $item;
-                }
-            }
-        }
     }
 
 }

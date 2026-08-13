@@ -87,7 +87,13 @@ class Application extends BaseApplication
             // https://book.cakephp.org/5/en/security/csrf.html#cross-site-request-forgery-csrf-middleware
             ->add(new CsrfProtectionMiddleware([
                 'httponly' => true,
-            ]));
+            ]))
+
+            // Tell every crawler/robot not to index or follow anything in this app.
+            ->add(function ($request, $handler) {
+                return $handler->handle($request)
+                    ->withHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+            });
 
         return $middlewareQueue;
     }

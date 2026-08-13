@@ -65,6 +65,7 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/pismenkova-zahrada', ['controller' => 'Pages', 'action' => 'pismenkovaZahrada'], ['_name' => 'pismenkova_zahrada']);
         $builder->connect('/wat/sound', ['controller' => 'Pages', 'action' => 'sound'], ['_name' => 'wat_sound']);
         $builder->connect('/papotv', ['controller' => 'Papo', 'action' => 'papotv'], ['_name' => 'papotv']);
+        $builder->connect('/papotv/admin', ['controller' => 'Papo', 'action' => 'admin'], ['_name' => 'papotv_admin']);
         $builder->connect('/papotv/item', ['controller' => 'Papo', 'action' => 'item'], ['_name' => 'papotv_item']);
         $builder->connect('/papotv/image/{fileId}', ['controller' => 'Papo', 'action' => 'image'], ['_name' => 'papotv_image'])->setPass(['fileId']);
         $builder->connect('/papotv/video/{fileId}', ['controller' => 'Papo', 'action' => 'video'], ['_name' => 'papotv_video'])->setPass(['fileId']);

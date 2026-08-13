@@ -47,6 +47,17 @@ return [
      *   `plugins`, `templates`, `locales` subkeys, which allow the definition of
      *   paths for plugins, view templates and locale files respectively.
      */
+    /*
+     * PapoTV slideshow configuration.
+     *
+     * - adminPassword - Password required to edit the slideshow link list
+     *   via the /papotv/admin form. Override in app_local.php or via the
+     *   PAPOTV_ADMIN_PASSWORD environment variable.
+     */
+    'PapoTv' => [
+        'adminPassword' => env('PAPOTV_ADMIN_PASSWORD', 'papotv'),
+    ],
+
     'App' => [
         'namespace' => 'App',
         'encoding' => env('APP_ENCODING', 'UTF-8'),
