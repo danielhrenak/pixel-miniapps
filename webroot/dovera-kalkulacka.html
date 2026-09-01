@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Kalkulačka Dôvery — Kasíno na konci sveta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1a1611;
+    --bg-panel: #26201a;
+    --bg-panel-2: #2f2820;
+    --border: #4a3d2e;
+    --text: #f1e7d4;
+    --text-dim: #b8a98c;
+    --rust: #c1440e;
+    --rust-dark: #8f3209;
+    --mustard: #d9a531;
+    --mustard-dark: #a97c1f;
+    --error: #e0473f;
+    --ok: #7fae55;
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    margin:0;
+    padding:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.4;
+    -webkit-text-size-adjust: 100%;
+  }
+  h1, h2, h3, .label-strong{
+    font-family: "Oswald", "Arial Narrow", sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .wrap{
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 16px 16px 48px;
+  }
+  header{
+    text-align:center;
+    padding: 18px 8px 20px;
+    border-bottom: 2px solid var(--rust);
+    margin-bottom: 20px;
+  }
+  header h1{
+    margin:0 0 4px;
+    font-size: 1.5rem;
+    color: var(--mustard);
+  }
+  header .sub{
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  fieldset{
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-panel);
+    padding: 14px 14px 16px;
+    margin: 0 0 16px;
+  }
+  legend{
+    padding: 0 8px;
+    font-family: "Oswald", sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mustard);
+  }
+  label{
+    display:block;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin: 12px 0 6px;
+  }
+  label:first-of-type{ margin-top: 0; }
+  select, input[type="number"], input[type="time"]{
+    width: 100%;
+    padding: 12px 12px;
+    font-size: 1.05rem;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    min-height: 48px;
+  }
+  select:focus, input:focus{
+    outline: none;
+    border-color: var(--mustard);
+  }
+  .row2{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    background: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 12px;
+    margin-top: 4px;
+  }
+  .checkbox-row input[type="checkbox"]{
+    width: 26px;
+    height: 26px;
+    accent-color: var(--rust);
+    flex: none;
+  }
+  .checkbox-row span{ font-size: 1rem; }
+  .note{
+    background: rgba(217,165,49,0.1);
+    border: 1px solid var(--mustard-dark);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    color: var(--mustard);
+    margin-top: 10px;
+  }
+  .hidden{ display:none !important; }
+  button{
+    width: 100%;
+    min-height: 54px;
+    font-family: "Oswald", sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #calcBtn{
+    background: var(--rust);
+    color: #fff;
+    margin-top: 4px;
+  }
+  #calcBtn:active{ background: var(--rust-dark); }
+  #resetBtn{
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    margin-top: 12px;
+  }
+  #resetBtn:active{ background: var(--bg-panel-2); }
+  .error-box{
+    background: rgba(224,71,63,0.12);
+    border: 1px solid var(--error);
+    color: #ffb3af;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+  }
+  #result{
+    border: 2px solid var(--mustard);
+    border-radius: 12px;
+    background: var(--bg-panel);
+    padding: 18px;
+    text-align:center;
+  }
+  #result .res-label{
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  #result .res-value{
+    font-family: "Oswald", sans-serif;
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--mustard);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  #result .res-value.zero{ color: var(--error); }
+  .breakdown{
+    margin-top: 16px;
+    text-align: left;
+    border-top: 1px dashed var(--border);
+    padding-top: 12px;
+  }
+  .breakdown div{
+    display:flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .breakdown div span:first-child{ color: var(--text-dim); }
+  .breakdown div span:last-child{ text-align:right; font-weight:600; }
+  .buff-line{ color: var(--ok) !important; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Kasíno na konci sveta</h1>
+    <div class="sub">Kalkulačka Dôvery</div>
+  </header>
+
+  <div id="errorBox" class="error-box hidden"></div>
+
+  <fieldset>
+    <legend>Tím</legend>
+    <label for="faction">Frakcia</label>
+    <select id="faction">
+      <option value="phoenix">Phoenixovia</option>
+      <option value="darkfeathers">Dark Feathers</option>
+      <option value="duskraccoons">Dusk Raccoons</option>
+      <option value="thunder">Thunder Band</option>
+      <option value="vinlanders">Vinlanders</option>
+    </select>
+  </fieldset>
+
+  <fieldset>
+    <legend>Stanovište</legend>
+    <label for="station">Stanovište / úloha</label>
+    <select id="station">
+      <option value="neon">Neon Eden pod hladinou</option>
+      <option value="dielna">Fénixova dielňa</option>
+      <option value="hroby">Hroby Siedmych bratov</option>
+      <option value="majak">Maják v ruinách</option>
+      <option value="stopy">Fénixie stopy</option>
+      <option value="retaz">Reťaz rúk</option>
+      <option value="trezor">Kľúč od Trezoru</option>
+    </select>
+  </fieldset>
+
+  <fieldset>
+    <legend>Čas</legend>
+    <label id="startTimeLabel" for="startTime">Čas odovzdania kartičky</label>
+    <input type="time" id="startTime">
+
+    <label for="endTime">Čas splnenia</label>
+    <input type="time" id="endTime">
+
+    <div id="vaultNote" class="note hidden">
+      Pri Kľúči od Trezoru znamená „čas odovzdania“ čas štartu fázy 1, nie čas vytiahnutia kartičky.
+    </div>
+  </fieldset>
+
+  <fieldset id="measureBox">
+    <legend>Miera splnenia</legend>
+
+    <div id="measure-neon" class="measure-group hidden">
+      <label for="neonGot">Vylovené predmety</label>
+      <input type="number" id="neonGot" min="0" step="1" inputmode="numeric">
+      <label for="neonTotal">Celkový počet predmetov v bazéne</label>
+      <input type="number" id="neonTotal" min="1" step="1" inputmode="numeric">
+    </div>
+
+    <div id="measure-hroby" class="measure-group hidden">
+      <label for="hrobyGot">Nájdené značky (0–7)</label>
+      <input type="number" id="hrobyGot" min="0" max="7" step="1" inputmode="numeric">
+    </div>
+
+    <div id="measure-majak" class="measure-group hidden">
+      <label for="majakGot">Správne zachytené slová (0–10)</label>
+      <input type="number" id="majakGot" min="0" max="10" step="1" inputmode="numeric">
+    </div>
+
+    <div id="measure-stopy" class="measure-group hidden">
+      <label for="stopyActual">Skutočný počet znamení</label>
+      <input type="number" id="stopyActual" min="1" step="1" inputmode="numeric">
+      <label for="stopyGuess">Odhad tímu</label>
+      <input type="number" id="stopyGuess" min="0" step="1" inputmode="numeric">
+    </div>
+
+    <div id="measure-retaz" class="measure-group hidden">
+      <label for="retazHits">Úspešné zásahy</label>
+      <input type="number" id="retazHits" min="0" step="1" inputmode="numeric">
+      <label for="retazFull">Plný počet</label>
+      <input type="number" id="retazFull" min="1" step="1" inputmode="numeric" value="8">
+    </div>
+
+    <div id="measure-dielna" class="measure-group hidden">
+      <div class="checkbox-row">
+        <input type="checkbox" id="dielnaDone">
+        <span>Puzzle bolo v limite úplne zložené</span>
+      </div>
+    </div>
+
+    <div id="measure-trezor" class="measure-group hidden">
+      <div class="note">Kombinácia sa hodnotí čisto binárne (hotovo) a čisto časom — žiadny ďalší vstup tu netreba.</div>
+    </div>
+
+  </fieldset>
+
+  <button id="calcBtn">Spočítať Dôveru</button>
+  <button id="resetBtn">Nový tím / reset</button>
+
+  <div id="result" class="hidden" style="margin-top:20px;">
+    <div class="res-label">Výsledná Dôvera</div>
+    <div id="resValue" class="res-value">0</div>
+    <div class="breakdown" id="breakdown"></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STATIONS = {
+    neon:   { measure: 'ratio' },
+    dielna: { measure: 'puzzle' },
+    hroby:  { measure: 'fixed', total: 7 },
+    majak:  { measure: 'fixed', total: 10 },
+    stopy:  { measure: 'estimate' },
+    retaz:  { measure: 'hits' },
+    trezor: { measure: 'vault' }
+  };
+
+  var factionEl = document.getElementById('faction');
+  var stationEl = document.getElementById('station');
+  var startTimeEl = document.getElementById('startTime');
+  var endTimeEl = document.getElementById('endTime');
+  var startTimeLabelEl = document.getElementById('startTimeLabel');
+  var vaultNoteEl = document.getElementById('vaultNote');
+  var errorBoxEl = document.getElementById('errorBox');
+  var resultEl = document.getElementById('result');
+  var resValueEl = document.getElementById('resValue');
+  var breakdownEl = document.getElementById('breakdown');
+
+  var measureGroups = document.querySelectorAll('.measure-group');
+
+  function clamp(v, lo, hi){ return Math.min(hi, Math.max(lo, v)); }
+
+  function showError(msg){
+    errorBoxEl.textContent = msg;
+    errorBoxEl.classList.remove('hidden');
+    resultEl.classList.add('hidden');
+  }
+  function clearError(){
+    errorBoxEl.classList.add('hidden');
+    errorBoxEl.textContent = '';
+  }
+
+  function updateStationUI(){
+    var stationId = stationEl.value;
+    measureGroups.forEach(function(g){ g.classList.add('hidden'); });
+    var group = document.getElementById('measure-' + stationId);
+    if(group){ group.classList.remove('hidden'); }
+
+    if(stationId === 'trezor'){
+      startTimeLabelEl.textContent = 'Čas štartu fázy 1';
+      vaultNoteEl.classList.remove('hidden');
+    } else {
+      startTimeLabelEl.textContent = 'Čas odovzdania kartičky';
+      vaultNoteEl.classList.add('hidden');
+    }
+  }
+
+  function parseTimeToMinutes(str){
+    if(!str) return null;
+    var parts = str.split(':');
+    if(parts.length !== 2) return null;
+    var h = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    if(isNaN(h) || isNaN(m)) return null;
+    return h * 60 + m;
+  }
+
+  function rawStandard(d){
+    var table = {0:20,1:20,2:20,3:20,4:20,5:20,6:19,7:18,8:17,9:16,10:15};
+    if(d <= 10) return table[d];
+    return Math.max(1, 15 - Math.ceil((d - 10) / 2));
+  }
+
+  function rawVault(d){
+    if(d <= 10) return 20;
+    if(d <= 15) return 19;
+    if(d <= 20) return 18;
+    if(d <= 25) return 17;
+    if(d <= 30) return 16;
+    return Math.max(1, 16 - Math.ceil((d - 30) / 5));
+  }
+
+  function calc(){
+    clearError();
+
+    var faction = factionEl.value;
+    var stationId = stationEl.value;
+    var station = STATIONS[stationId];
+
+    var start = parseTimeToMinutes(startTimeEl.value);
+    var end = parseTimeToMinutes(endTimeEl.value);
+
+    if(start === null || end === null){
+      showError('Zadaj oba časy (odovzdanie aj splnenie).');
+      return;
+    }
+
+    var durationBefore = end - start;
+    if(durationBefore < 0){
+      showError('Čas splnenia je skôr než čas odovzdania — skontroluj zadané časy.');
+      return;
+    }
+    durationBefore = Math.ceil(durationBefore);
+
+    var duration = durationBefore;
+    var buffLines = [];
+
+    if(faction === 'thunder'){
+      var before1 = duration;
+      duration = Math.max(0, duration - 1);
+      buffLines.push('Buff Thunder Band: −1 min uplatnený (' + before1 + ' → ' + duration + ' min)');
+    }
+    if(faction === 'phoenix' && stationId === 'dielna'){
+      var before2 = duration;
+      duration = Math.max(0, duration - 3);
+      buffLines.push('Buff Phoenixovia (Fénixova dielňa): −3 min uplatnený (' + before2 + ' → ' + duration + ' min)');
+    }
+
+    var raw = (stationId === 'trezor') ? rawVault(duration) : rawStandard(duration);
+    raw = Math.max(1, raw);
+
+    var percento = null;
+    var final;
+
+    if(station.measure === 'puzzle'){
+      var done = document.getElementById('dielnaDone').checked;
+      final = done ? raw : 0;
+
+    } else if(station.measure === 'vault'){
+      final = raw;
+
+    } else if(station.measure === 'ratio'){
+      var got = Number(document.getElementById('neonGot').value);
+      var total = Number(document.getElementById('neonTotal').value);
+      if(!(total > 0)){
+        showError('Celkový počet predmetov v bazéne musí byť väčší ako 0.');
+        return;
+      }
+      percento = clamp(got / total * 100, 0, 100);
+      final = Math.floor(raw * percento / 100);
+
+    } else if(station.measure === 'fixed'){
+      var gotEl = document.getElementById((stationId === 'hroby') ? 'hrobyGot' : 'majakGot');
+      var got2 = Number(gotEl.value);
+      percento = clamp(got2 / station.total * 100, 0, 100);
+      final = Math.floor(raw * percento / 100);
+
+    } else if(station.measure === 'estimate'){
+      var actual = Number(document.getElementById('stopyActual').value);
+      var guess = Number(document.getElementById('stopyGuess').value);
+      if(!(actual > 0)){
+        showError('Skutočný počet znamení musí byť väčší ako 0.');
+        return;
+      }
+      percento = clamp(100 - Math.abs(guess - actual) / actual * 100, 0, 100);
+      final = Math.floor(raw * percento / 100);
+
+    } else if(station.measure === 'hits'){
+      var hits = Number(document.getElementById('retazHits').value);
+      var full = Number(document.getElementById('retazFull').value);
+      if(!(full > 0)){
+        showError('Plný počet musí byť väčší ako 0.');
+        return;
+      }
+      percento = clamp(Math.min(100, hits / full * 100), 0, 100);
+      final = Math.floor(raw * percento / 100);
+    }
+
+    renderResult({
+      durationBefore: durationBefore,
+      duration: duration,
+      buffLines: buffLines,
+      raw: raw,
+      percento: percento,
+      final: final
+    });
+  }
+
+  function renderResult(r){
+    resValueEl.textContent = r.final;
+    resValueEl.classList.toggle('zero', r.final === 0);
+
+    var rows = [];
+    rows.push(['Trvanie pred buffom', r.durationBefore + ' min']);
+    if(r.buffLines.length){
+      r.buffLines.forEach(function(line){ rows.push(['buff', line]); });
+    } else {
+      rows.push(['Časový buff', 'žiadny neuplatnený']);
+    }
+    rows.push(['Trvanie po buffe', r.duration + ' min']);
+    rows.push(['Základná hodnota (raw)', r.raw]);
+    rows.push(['Percento splnenia', (r.percento === null) ? 'neaplikuje sa' : Math.round(r.percento) + ' %']);
+    rows.push(['Finálna Dôvera', r.final]);
+
+    breakdownEl.innerHTML = '';
+    rows.forEach(function(pair){
+      var div = document.createElement('div');
+      if(pair[0] === 'buff'){
+        div.className = 'buff-line';
+        div.innerHTML = '<span>' + pair[1] + '</span>';
+      } else {
+        div.innerHTML = '<span>' + pair[0] + '</span><span>' + pair[1] + '</span>';
+      }
+      breakdownEl.appendChild(div);
+    });
+
+    resultEl.classList.remove('hidden');
+    resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function resetForm(){
+    factionEl.selectedIndex = 0;
+    stationEl.selectedIndex = 0;
+    startTimeEl.value = '';
+    endTimeEl.value = '';
+    document.getElementById('neonGot').value = '';
+    document.getElementById('neonTotal').value = '';
+    document.getElementById('hrobyGot').value = '';
+    document.getElementById('majakGot').value = '';
+    document.getElementById('stopyActual').value = '';
+    document.getElementById('stopyGuess').value = '';
+    document.getElementById('retazHits').value = '';
+    document.getElementById('retazFull').value = 8;
+    document.getElementById('dielnaDone').checked = false;
+    clearError();
+    resultEl.classList.add('hidden');
+    updateStationUI();
+  }
+
+  stationEl.addEventListener('change', updateStationUI);
+  document.getElementById('calcBtn').addEventListener('click', calc);
+  document.getElementById('resetBtn').addEventListener('click', resetForm);
+
+  updateStationUI();
+})();
+</script>
+
+</body>
+</html>
