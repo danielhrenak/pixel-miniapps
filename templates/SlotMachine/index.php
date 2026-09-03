@@ -40,6 +40,9 @@
                     <div class="bet-controls">
                         <button id="bet-minus-btn" type="button" class="slot-button button-secondary bet-step">−</button>
                         <div class="bet-buttons">
+                            <button type="button" class="slot-button button-secondary bet-quick" data-bet="1">1</button>
+                            <button type="button" class="slot-button button-secondary bet-quick" data-bet="2">2</button>
+                            <button type="button" class="slot-button button-secondary bet-quick" data-bet="5">5</button>
                             <button type="button" class="slot-button button-secondary bet-quick" data-bet="10">10</button>
                             <button type="button" class="slot-button button-secondary bet-quick" data-bet="25">25</button>
                             <button type="button" class="slot-button button-secondary bet-quick" data-bet="50">50</button>
@@ -56,9 +59,9 @@
                     </div>
                 </div>
 
-                <div id="topup-row" class="topup-row hidden">
-                    <p>Došiel ti kredit!</p>
-                    <button id="topup-btn" type="button" class="slot-button button-primary">💰 Dobiť kredit (100)</button>
+                <div class="wallet-actions">
+                    <button id="add-credit-btn" type="button" class="slot-button button-secondary">➕ Doplniť kredit</button>
+                    <button id="payout-btn" type="button" class="slot-button button-primary">💵 Vyplatiť</button>
                 </div>
             </div>
 
@@ -74,6 +77,48 @@
                     <div id="history-list" class="history-list"></div>
                 </div>
             </aside>
+        </div>
+    </div>
+
+    <!-- Start credit modal -->
+    <div id="start-credit-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h3>🎰 Vstupný kredit</h3>
+            <p class="modal-hint">Zadaj, s akým kreditom chceš do automatu vstúpiť.</p>
+            <label class="modal-label" for="start-credit-input">Vstupný kredit</label>
+            <input id="start-credit-input" type="number" min="1" max="1000000" step="1" value="100">
+            <p id="start-credit-error" class="form-error hidden"></p>
+            <div class="modal-actions">
+                <button id="start-credit-btn" type="button" class="slot-button button-primary">▶ Štart</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add credit modal -->
+    <div id="add-credit-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3>➕ Doplniť kredit</h3>
+            <p class="modal-hint">Zadaj, koľko kreditu chceš pridať.</p>
+            <label class="modal-label" for="add-credit-input">Suma</label>
+            <input id="add-credit-input" type="number" min="1" max="1000000" step="1" value="100">
+            <p id="add-credit-error" class="form-error hidden"></p>
+            <div class="modal-actions modal-actions-row">
+                <button id="add-credit-cancel-btn" type="button" class="slot-button button-secondary">Zrušiť</button>
+                <button id="add-credit-confirm-btn" type="button" class="slot-button button-primary">➕ Doplniť</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payout modal -->
+    <div id="payout-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <h3>💵 Vyplatenie</h3>
+            <p class="modal-hint">Vyplatíš celý svoj kredit a hra sa vynuluje na 0.</p>
+            <div id="payout-amount-preview" class="payout-amount">0</div>
+            <div class="modal-actions modal-actions-row">
+                <button id="payout-cancel-btn" type="button" class="slot-button button-secondary">Zrušiť</button>
+                <button id="payout-confirm-btn" type="button" class="slot-button button-primary">💵 Vyplatiť</button>
+            </div>
         </div>
     </div>
 </section>
@@ -390,15 +435,24 @@
     .lever-button.pulled .lever-knob { top: 44px; }
     .lever-button:disabled { cursor: not-allowed; opacity: 0.5; }
 
-    .topup-row {
-        text-align: center;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 215, 0, 0.3);
-        background: rgba(255, 215, 0, 0.08);
-        padding: 0.75rem;
+    .wallet-actions {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
     }
 
-    .topup-row p { margin: 0 0 0.5rem; font-weight: 800; color: #ffd700; }
+    .wallet-actions .slot-button { flex: 1 1 180px; }
+
+    .payout-amount {
+        margin: 0.3rem 0 0.2rem;
+        font-size: 2.2rem;
+        font-weight: 900;
+        color: #4ade80;
+        text-shadow: 0 0 18px rgba(74, 222, 128, 0.35);
+    }
+
+    .modal-actions-row { display: flex; gap: 0.6rem; }
+    .modal-actions-row .slot-button { flex: 1 1 0; }
 
     .paytable-col { display: flex; flex-direction: column; gap: 0.75rem; }
 
@@ -460,6 +514,76 @@
     .history-net.positive { color: #4ade80; }
     .history-net.negative { color: #f87171; }
 
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        padding: 1rem;
+    }
+
+    .modal-card {
+        width: min(400px, 100%);
+        border-radius: 18px;
+        border: 1px solid rgba(255, 215, 0, 0.28);
+        background: #1a0d0d;
+        padding: 1.2rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+        text-align: center;
+    }
+
+    .modal-card h3 { margin: 0 0 0.5rem; color: #ffd700; font-size: 1.2rem; }
+
+    .modal-hint { margin: 0 0 0.9rem; color: #d1d5db; font-size: 0.85rem; line-height: 1.5; }
+
+    .modal-label {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: #d1d5db;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-align: left;
+    }
+
+    #start-credit-input,
+    #add-credit-input {
+        width: 100%;
+        box-sizing: border-box;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: #fff8e6;
+        color: #241010;
+        padding: 0.65rem 0.8rem;
+        font-size: 1.1rem;
+        text-align: center;
+        font-weight: 800;
+    }
+
+    #start-credit-input:focus,
+    #add-credit-input:focus {
+        outline: none;
+        border-color: rgba(255, 215, 0, 0.6);
+        box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.14);
+    }
+
+    .modal-actions { margin-top: 1rem; }
+    .modal-actions .slot-button { width: 100%; }
+
+    .form-error {
+        margin: 0.5rem 0 0;
+        color: #fecaca;
+        background: rgba(255, 0, 0, 0.08);
+        border: 1px solid rgba(255, 0, 0, 0.24);
+        border-radius: 10px;
+        padding: 0.45rem 0.65rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-align: left;
+    }
+
     @keyframes reelPulse {
         0%, 100% { filter: brightness(1); }
         50% { filter: brightness(1.35); }
@@ -483,6 +607,8 @@
         .controls-row { flex-direction: column; align-items: stretch; }
         .bet-controls { justify-content: center; }
         .spin-controls { justify-content: center; }
+        .wallet-actions { flex-direction: column; }
+        .modal-actions-row { flex-direction: column; }
     }
 </style>
 
@@ -493,11 +619,11 @@
     var MOBILE_BREAKPOINT = 640;
     var STRIP_LENGTH = 34;
     var SPIN_MS = [1800, 2200, 2600];
-    var START_CREDIT = 100;
-    var TOPUP_AMOUNT = 100;
+    var MAX_START_CREDIT = 1000000;
     var MIN_BET = 1;
     var MAX_BET = 200;
     var BET_STEP = 5;
+    var STORAGE_KEY = 'pixelMiniapps.slotMachine.credit';
 
     var SYMBOLS = [
         { key: 'cherry', emoji: '🍒', weight: 9, mult: 3 },
@@ -511,7 +637,7 @@
     var TOTAL_WEIGHT = SYMBOLS.reduce(function (sum, s) { return sum + s.weight; }, 0);
 
     var state = {
-        credit: START_CREDIT,
+        credit: 0,
         bet: 10,
         spinning: false,
         history: [],
@@ -531,11 +657,48 @@
         betQuickBtns: Array.prototype.slice.call(document.querySelectorAll('.bet-quick[data-bet]')),
         spinBtn: document.getElementById('spin-btn'),
         leverBtn: document.getElementById('lever-btn'),
-        topupRow: document.getElementById('topup-row'),
-        topupBtn: document.getElementById('topup-btn'),
+        addCreditBtn: document.getElementById('add-credit-btn'),
+        payoutBtn: document.getElementById('payout-btn'),
         paytableList: document.getElementById('paytable-list'),
         historyList: document.getElementById('history-list'),
+
+        startCreditModal: document.getElementById('start-credit-modal'),
+        startCreditInput: document.getElementById('start-credit-input'),
+        startCreditError: document.getElementById('start-credit-error'),
+        startCreditBtn: document.getElementById('start-credit-btn'),
+
+        addCreditModal: document.getElementById('add-credit-modal'),
+        addCreditInput: document.getElementById('add-credit-input'),
+        addCreditError: document.getElementById('add-credit-error'),
+        addCreditCancelBtn: document.getElementById('add-credit-cancel-btn'),
+        addCreditConfirmBtn: document.getElementById('add-credit-confirm-btn'),
+
+        payoutModal: document.getElementById('payout-modal'),
+        payoutAmountPreview: document.getElementById('payout-amount-preview'),
+        payoutCancelBtn: document.getElementById('payout-cancel-btn'),
+        payoutConfirmBtn: document.getElementById('payout-confirm-btn'),
     };
+
+    // ---------- Credit persistence ----------
+
+    function loadSavedCredit() {
+        try {
+            var raw = window.localStorage.getItem(STORAGE_KEY);
+            if (raw === null) return null;
+            var value = parseInt(raw, 10);
+            return Number.isFinite(value) && value >= 0 ? value : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function saveCredit() {
+        try {
+            window.localStorage.setItem(STORAGE_KEY, String(state.credit));
+        } catch (e) {
+            // ignore (private browsing / storage disabled)
+        }
+    }
 
     function createEl(tag, className, text) {
         var node = document.createElement(tag);
@@ -575,7 +738,7 @@
     function renderCredit() {
         el.creditValue.textContent = String(state.credit);
         el.betValue.textContent = String(state.bet);
-        el.topupRow.classList.toggle('hidden', state.credit >= MIN_BET);
+        saveCredit();
         updateSpinAvailability();
     }
 
@@ -591,6 +754,8 @@
             btn.disabled = state.spinning || val > state.credit;
             btn.classList.toggle('active-bet', val === state.bet);
         });
+        el.addCreditBtn.disabled = state.spinning;
+        el.payoutBtn.disabled = state.spinning || state.credit <= 0;
     }
 
     function setBet(value) {
@@ -609,11 +774,89 @@
         btn.addEventListener('click', function () { setBet(parseInt(btn.dataset.bet, 10)); });
     });
 
-    el.topupBtn.addEventListener('click', function () {
-        state.credit += TOPUP_AMOUNT;
-        setMessage('Kredit dobitý! Veľa šťastia. 🍀', null);
+    // ---------- Start credit modal ----------
+
+    function confirmStartCredit() {
+        var value = parseInt(el.startCreditInput.value, 10);
+        if (!Number.isFinite(value) || value < 1 || value > MAX_START_CREDIT) {
+            el.startCreditError.textContent = 'Zadaj platný vstupný kredit (celé číslo 1 až ' + MAX_START_CREDIT + ').';
+            el.startCreditError.classList.remove('hidden');
+            return;
+        }
+        state.credit = value;
+        el.startCreditModal.classList.add('hidden');
         renderCredit();
+    }
+
+    el.startCreditBtn.addEventListener('click', confirmStartCredit);
+    el.startCreditInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            confirmStartCredit();
+        }
     });
+
+    // ---------- Add credit modal ----------
+
+    function openAddCreditModal() {
+        el.addCreditInput.value = '100';
+        el.addCreditError.classList.add('hidden');
+        el.addCreditModal.classList.remove('hidden');
+        window.setTimeout(function () { el.addCreditInput.focus(); el.addCreditInput.select(); }, 0);
+    }
+
+    function closeAddCreditModal() {
+        el.addCreditModal.classList.add('hidden');
+    }
+
+    function confirmAddCredit() {
+        var amount = parseInt(el.addCreditInput.value, 10);
+        if (!Number.isFinite(amount) || amount < 1 || amount > MAX_START_CREDIT) {
+            el.addCreditError.textContent = 'Zadaj platnú sumu (celé číslo väčšie ako 0).';
+            el.addCreditError.classList.remove('hidden');
+            return;
+        }
+        state.credit += amount;
+        closeAddCreditModal();
+        setMessage('Kredit doplnený o ' + amount + '. Veľa šťastia! 🍀', null);
+        renderCredit();
+    }
+
+    el.addCreditBtn.addEventListener('click', openAddCreditModal);
+    el.addCreditCancelBtn.addEventListener('click', closeAddCreditModal);
+    el.addCreditConfirmBtn.addEventListener('click', confirmAddCredit);
+    el.addCreditInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            confirmAddCredit();
+        } else if (event.key === 'Escape') {
+            closeAddCreditModal();
+        }
+    });
+
+    // ---------- Payout modal ----------
+
+    function openPayoutModal() {
+        if (state.credit <= 0) return;
+        el.payoutAmountPreview.textContent = String(state.credit);
+        el.payoutModal.classList.remove('hidden');
+    }
+
+    function closePayoutModal() {
+        el.payoutModal.classList.add('hidden');
+    }
+
+    function confirmPayout() {
+        var amount = state.credit;
+        state.credit = 0;
+        closePayoutModal();
+        setMessage('💵 Vyplatené ' + amount + ' kreditov! Kredit je teraz 0 — kedykoľvek si ho môžeš doplniť.', 'win');
+        renderCredit();
+    }
+
+    el.payoutBtn.addEventListener('click', openPayoutModal);
+    el.payoutCancelBtn.addEventListener('click', closePayoutModal);
+    el.payoutConfirmBtn.addEventListener('click', confirmPayout);
 
     // ---------- Message ----------
 
@@ -740,7 +983,7 @@
         renderCredit();
 
         if (state.credit < MIN_BET) {
-            setMessage('Došiel ti kredit. Dobi si ho a hraj ďalej!', 'lose');
+            setMessage('Došiel ti kredit. Klikni na „Doplniť kredit“ a hraj ďalej!', 'lose');
         } else if (state.bet > state.credit) {
             setBet(state.credit);
         }
@@ -751,7 +994,16 @@
 
     renderPaytable();
     renderHistory();
-    renderCredit();
     initReels();
+
+    var savedCredit = loadSavedCredit();
+    if (savedCredit !== null) {
+        state.credit = savedCredit;
+        el.startCreditModal.classList.add('hidden');
+        renderCredit();
+    } else {
+        renderCredit();
+        window.setTimeout(function () { el.startCreditInput.focus(); el.startCreditInput.select(); }, 0);
+    }
 })();
 </script>

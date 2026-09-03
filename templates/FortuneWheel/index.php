@@ -504,11 +504,6 @@
             showPlayersError('Maximálny počet hráčov je ' + MAX_PLAYERS + '.');
             return;
         }
-        var exists = state.players.some(function (p) { return p.name.toLowerCase() === name.toLowerCase(); });
-        if (exists) {
-            showPlayersError('Hráč s týmto menom už hral. Zvoľ iné meno.');
-            return;
-        }
         if (!Number.isFinite(stake) || stake < 1) {
             showPlayersError('Zadaj platnú stávku (celé číslo väčšie ako 0).');
             return;
