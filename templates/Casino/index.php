@@ -8,7 +8,7 @@
 
         <div class="games-grid">
             <a href="/ruleta" class="game-card game-roulette">
-                <div class="game-icon">🎰</div>
+                <div class="game-icon">🔴⚫</div>
                 <h2>Ruleta</h2>
                 <p>Pridaj hráčov, rozdeľ stávky po políčkach a roztoč koleso šťastia.</p>
                 <span class="game-cta">Hrať →</span>
@@ -22,7 +22,7 @@
             </a>
 
             <a href="/herny-automat" class="game-card game-slot">
-                <div class="game-icon">🎲</div>
+                <div class="game-icon">🎰</div>
                 <h2>Herný automat</h2>
                 <p>Klasický jednoruký bandita — vsaď kredit a skús to na valcoch.</p>
                 <span class="game-cta">Hrať →</span>
