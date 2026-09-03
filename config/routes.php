@@ -81,6 +81,11 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/scavenge/stage_mastermind', ['controller' => 'Scavenger', 'action' => 'stageMastermind'], ['_name' => 'scavenger_stage_mastermind']);
         $builder->connect('/scavenge/stage_code', ['controller' => 'Scavenger', 'action' => 'stageCode'], ['_name' => 'scavenger_stage_code']);
 
+        $builder->connect('/kasino', ['controller' => 'Casino', 'action' => 'index'], ['_name' => 'casino_index']);
+        $builder->connect('/ruleta', ['controller' => 'Roulette', 'action' => 'index'], ['_name' => 'roulette_index']);
+        $builder->connect('/koleso-stastia', ['controller' => 'FortuneWheel', 'action' => 'index'], ['_name' => 'fortune_wheel_index']);
+        $builder->connect('/herny-automat', ['controller' => 'SlotMachine', 'action' => 'index'], ['_name' => 'slot_machine_index']);
+
         $builder->connect('/personality/prod', ['controller' => 'Personality', 'action' => 'prod'], ['_name' => 'personality_prod']);
         $builder->connect('/personality/cm', ['controller' => 'Personality', 'action' => 'cm'], ['_name' => 'personality_cm']);
         $builder->connect('/personality/individual', ['controller' => 'Personality', 'action' => 'individual'], ['_name' => 'personality_individual']);
